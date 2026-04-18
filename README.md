@@ -1,6 +1,9 @@
-# 🤖 AI Developer Assistant
+### 🤖 AI Developer Assistant *(Main Project)*
 
-> AI-powered system for error analysis and learning support
+- AI 기반 코드 에러 분석 및 해결 가이드 제공
+- 학습 기록일기와 출석 체크 기능 구현
+- 날짜별 학습 데이터를 기반으로 성장 그래프 시각화
+- FastAPI + HTML/CSS/JavaScript + SQLite 기반 MVP 구현 완료
 
 ---
 
