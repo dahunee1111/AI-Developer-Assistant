@@ -1,1 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AI Error Analyzer</title>
+</head>
+<body>
 
+<h2>AI Error Analyzer</h2>
+
+<textarea id="errorInput" rows="6" cols="50"
+placeholder="에러를 입력하세요"></textarea><br><br>
+
+<button onclick="analyze()">분석하기</button>
+
+<h3>결과:</h3>
+<p id="result"></p>
+
+<script>
+async function analyze() {
+  const error = document.getElementById("errorInput").value;
+
+  const response = await fetch("http://127.0.0.1:8000/analyze", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ error: error })
+  });
+
+  const data = await response.json();
+  document.getElementById("result").innerText = data.result;
+}
+</script>
+
+</body>
+</html>
