@@ -1,0 +1,1801 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>시험 시스템 | AI Developer Assistant</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --panel: rgba(17, 24, 39, 0.82);
+      --line: rgba(255, 255, 255, 0.08);
+      --text: #eef4ff;
+      --muted: #a7b4c8;
+      --primary: #3b82f6;
+      --primary-2: #22d3ee;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --success: #22c55e;
+      --partial: #facc15;
+      --shadow: 0 18px 45px rgba(0, 0, 0, 0.28);
+      --radius: 22px;
+      --card-bg: rgba(255,255,255,0.04);
+      --card-border: rgba(255,255,255,0.08);
+      --hero-grad-1: rgba(15,23,42,0.96);
+      --hero-grad-2: rgba(30,41,59,0.88);
+      --name-accent: inherit;
+    }
+
+    html[data-theme="light"] {
+      --bg: #eef4ff;
+      --panel: rgba(255, 255, 255, 0.92);
+      --line: rgba(15, 23, 42, 0.08);
+      --text: #0f172a;
+      --muted: #475569;
+      --primary: #2563eb;
+      --primary-2: #06b6d4;
+      --warning: #d97706;
+      --danger: #dc2626;
+      --success: #16a34a;
+      --partial: #ca8a04;
+      --shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+      --card-bg: rgba(15,23,42,0.03);
+      --card-border: rgba(15,23,42,0.08);
+      --hero-grad-1: rgba(255,255,255,0.98);
+      --hero-grad-2: rgba(241,245,249,0.92);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Segoe UI", Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(59,130,246,0.10), transparent 24%),
+        radial-gradient(circle at top right, rgba(34,211,238,0.10), transparent 22%),
+        linear-gradient(180deg, var(--bg) 0%, var(--bg) 100%);
+      max-width: 1480px;
+      margin: 0 auto;
+      padding: 24px 18px 48px;
+      line-height: 1.6;
+      transition: background 0.25s ease, color 0.25s ease;
+    }
+
+    body.custom-background-space {
+      background:
+        radial-gradient(circle at 20% 20%, rgba(99,102,241,0.22), transparent 18%),
+        radial-gradient(circle at 80% 18%, rgba(168,85,247,0.18), transparent 18%),
+        radial-gradient(circle at 50% 80%, rgba(34,211,238,0.14), transparent 20%),
+        linear-gradient(180deg, #060816 0%, #0b1020 55%, #111827 100%);
+    }
+
+    body.custom-background-sunset {
+      background:
+        radial-gradient(circle at 20% 20%, rgba(251,146,60,0.22), transparent 20%),
+        radial-gradient(circle at 80% 18%, rgba(244,114,182,0.16), transparent 18%),
+        linear-gradient(180deg, #1f2937 0%, #7c2d12 45%, #ea580c 100%);
+    }
+
+    body.custom-background-aurora {
+      background:
+        radial-gradient(circle at 18% 20%, rgba(34,197,94,0.18), transparent 20%),
+        radial-gradient(circle at 78% 18%, rgba(59,130,246,0.18), transparent 18%),
+        radial-gradient(circle at 50% 70%, rgba(168,85,247,0.16), transparent 22%),
+        linear-gradient(180deg, #03111f 0%, #0b1b2b 45%, #111827 100%);
+    }
+
+    body.custom-background-matrix {
+      background:
+        radial-gradient(circle at 20% 15%, rgba(34,197,94,0.14), transparent 18%),
+        linear-gradient(180deg, #020b05 0%, #04150b 50%, #0b1220 100%);
+    }
+
+    body.custom-background-midnight_city {
+      background:
+        radial-gradient(circle at 80% 15%, rgba(59,130,246,0.12), transparent 20%),
+        radial-gradient(circle at 20% 20%, rgba(168,85,247,0.10), transparent 18%),
+        linear-gradient(180deg, #0b1020 0%, #111827 45%, #1f2937 100%);
+    }
+
+    .glass {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      backdrop-filter: blur(16px);
+      box-shadow: var(--shadow);
+      border-radius: var(--radius);
+      transition: background 0.25s ease, border-color 0.25s ease;
+    }
+
+    .card-skin-glass-strong .glass,
+    .card-skin-glass-strong .exam-card,
+    .card-skin-glass-strong .question-card,
+    .card-skin-glass-strong .summary-card,
+    .card-skin-glass-strong .result-card,
+    .card-skin-glass-strong .wrong-note-card,
+    .card-skin-glass-strong .retry-card,
+    .card-skin-glass-strong .insight-card,
+    .card-skin-glass-strong .point-card {
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.12);
+    }
+
+    .card-skin-soft-light .glass,
+    .card-skin-soft-light .exam-card,
+    .card-skin-soft-light .question-card,
+    .card-skin-soft-light .summary-card,
+    .card-skin-soft-light .result-card,
+    .card-skin-soft-light .wrong-note-card,
+    .card-skin-soft-light .retry-card,
+    .card-skin-soft-light .insight-card,
+    .card-skin-soft-light .point-card {
+      background: rgba(255,255,255,0.06);
+      border-color: rgba(255,255,255,0.10);
+    }
+
+    .card-skin-outline-neon .glass,
+    .card-skin-outline-neon .exam-card,
+    .card-skin-outline-neon .question-card,
+    .card-skin-outline-neon .summary-card,
+    .card-skin-outline-neon .result-card,
+    .card-skin-outline-neon .wrong-note-card,
+    .card-skin-outline-neon .retry-card,
+    .card-skin-outline-neon .insight-card,
+    .card-skin-outline-neon .point-card {
+      border-color: rgba(34,211,238,0.28);
+      box-shadow:
+        0 18px 45px rgba(0, 0, 0, 0.28),
+        0 0 0 1px rgba(59,130,246,0.10) inset;
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: 28px;
+      margin-bottom: 18px;
+      background: linear-gradient(135deg, var(--hero-grad-1), var(--hero-grad-2)), var(--panel);
+    }
+
+    .hero.custom-theme-blue_neon {
+      background: linear-gradient(135deg, rgba(8,47,73,0.98), rgba(14,116,144,0.88)), var(--panel);
+    }
+
+    .hero.custom-theme-purple_galaxy {
+      background: linear-gradient(135deg, rgba(46,16,101,0.98), rgba(88,28,135,0.88)), var(--panel);
+    }
+
+    .hero.custom-theme-emerald_forest {
+      background: linear-gradient(135deg, rgba(6,78,59,0.98), rgba(20,83,45,0.90)), var(--panel);
+    }
+
+    .hero.custom-theme-crimson_sunset {
+      background: linear-gradient(135deg, rgba(127,29,29,0.98), rgba(194,65,12,0.90)), var(--panel);
+    }
+
+    .hero.custom-theme-silver_minimal {
+      background: linear-gradient(135deg, rgba(51,65,85,0.96), rgba(100,116,139,0.84)), var(--panel);
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 18% 20%, rgba(96,165,250,0.14), transparent 20%),
+        radial-gradient(circle at 82% 24%, rgba(34,211,238,0.10), transparent 18%);
+      pointer-events: none;
+    }
+
+    .hero-topbar {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .theme-toggle {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid var(--line);
+      box-shadow: none;
+      color: var(--text);
+    }
+
+    .user-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 13px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.06);
+      color: var(--name-accent);
+      font-size: 0.88rem;
+      font-weight: 700;
+    }
+
+    .hero-inner {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+      font-size: 0.88rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .profile-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 13px;
+      border-radius: 999px;
+      margin-left: 8px;
+      font-size: 0.84rem;
+      font-weight: 800;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06);
+    }
+
+    .profile-badge.gold_dev { background: rgba(245,158,11,0.18); color: #fde68a; border-color: rgba(245,158,11,0.28); }
+    .profile-badge.master_coder { background: rgba(168,85,247,0.18); color: #e9d5ff; border-color: rgba(168,85,247,0.28); }
+    .profile-badge.bug_hunter { background: rgba(34,197,94,0.18); color: #bbf7d0; border-color: rgba(34,197,94,0.28); }
+    .profile-badge.exam_ace { background: rgba(59,130,246,0.18); color: #bfdbfe; border-color: rgba(59,130,246,0.28); }
+    .profile-badge.streak_master { background: rgba(244,114,182,0.18); color: #fbcfe8; border-color: rgba(244,114,182,0.28); }
+
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3.3rem);
+      line-height: 1.08;
+      letter-spacing: -0.04em;
+      margin-bottom: 10px;
+      color: var(--name-accent);
+    }
+
+    .hero h1 span {
+      background: linear-gradient(135deg, #7dd3fc, #93c5fd, #67e8f9);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero p {
+      color: var(--muted);
+      max-width: 760px;
+      margin-bottom: 16px;
+      font-size: 0.98rem;
+    }
+
+    .hero-stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .mini-card, .hero-panel {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+    }
+
+    .mini-card { padding: 16px; }
+    .hero-panel { padding: 18px; }
+
+    .mini-card strong {
+      display: block;
+      font-size: 1rem;
+      margin-bottom: 4px;
+      color: var(--name-accent);
+    }
+
+    .mini-card span {
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .hero-panel h2 {
+      font-size: 1.08rem;
+      margin-bottom: 8px;
+      color: var(--name-accent);
+    }
+
+    .hero-panel p {
+      margin-bottom: 10px;
+      color: var(--muted);
+      font-size: 0.93rem;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+
+    .pill-row span {
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      font-size: 0.8rem;
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .page-grid {
+      display: grid;
+      grid-template-columns: 320px minmax(0, 1fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .sidebar,
+    .main-panel {
+      padding: 20px;
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .section-head h2 {
+      font-size: 1.12rem;
+      color: var(--name-accent);
+    }
+
+    .section-sub {
+      color: var(--muted);
+      font-size: 0.94rem;
+      margin-bottom: 14px;
+    }
+
+    .exam-list {
+      display: grid;
+      gap: 12px;
+      max-height: 760px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .exam-card,
+    .question-card,
+    .summary-card,
+    .result-card,
+    .wrong-note-card,
+    .retry-card,
+    .insight-card,
+    .point-card {
+      padding: 16px;
+      border-radius: 18px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+    }
+
+    .exam-card h3,
+    .question-card h3,
+    .result-card h3,
+    .retry-card h3,
+    .insight-card h3,
+    .point-card h3 {
+      margin-bottom: 8px;
+      color: var(--name-accent);
+    }
+
+    .meta {
+      color: var(--muted);
+      font-size: 0.9rem;
+      white-space: pre-wrap;
+    }
+
+    .badge-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin: 10px 0 14px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .badge-exam { background: rgba(59,130,246,0.14); color: #bfdbfe; }
+    .badge-score { background: rgba(34,211,238,0.14); color: #a5f3fc; }
+    .badge-correct { background: rgba(34,197,94,0.14); color: #bbf7d0; }
+    .badge-wrong { background: rgba(239,68,68,0.14); color: #fecaca; }
+    .badge-partial { background: rgba(250,204,21,0.14); color: #fde68a; }
+    .badge-reviewed { background: rgba(34,197,94,0.14); color: #bbf7d0; }
+    .badge-pending { background: rgba(239,68,68,0.14); color: #fecaca; }
+    .badge-point { background: rgba(34,197,94,0.14); color: #bbf7d0; }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .summary-card strong {
+      display: block;
+      font-size: 1.3rem;
+      margin-bottom: 4px;
+      color: var(--name-accent);
+    }
+
+    .summary-card span {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .question-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .question-nav button {
+      min-width: 42px;
+      padding: 10px 12px;
+    }
+
+    .question-nav .active {
+      outline: 2px solid rgba(125,211,252,0.8);
+    }
+
+    .question-nav .answered {
+      background: linear-gradient(135deg, #16a34a, #22c55e);
+    }
+
+    .question-nav .not-answered {
+      background: rgba(255,255,255,0.08);
+      box-shadow: none;
+    }
+
+    .question-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+
+    .filter-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .filter-row button.active-filter {
+      outline: 2px solid rgba(125,211,252,0.8);
+    }
+
+    .options {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .option-item {
+      display: block;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      cursor: pointer;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 260px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      padding: 14px 16px;
+      resize: vertical;
+      outline: none;
+      font-size: 14px;
+      font-family: Consolas, monospace;
+      margin-top: 14px;
+    }
+
+    textarea:focus, input:focus, select:focus {
+      border-color: rgba(96,165,250,0.6);
+      box-shadow: 0 0 0 4px rgba(59,130,246,0.12);
+    }
+
+    button {
+      border: none;
+      cursor: pointer;
+      border-radius: 12px;
+      padding: 10px 16px;
+      font-weight: 700;
+      color: white;
+      background: linear-gradient(135deg, var(--primary), var(--primary-2));
+      transition: transform 0.2s ease, opacity 0.2s ease;
+      box-shadow: 0 10px 24px rgba(59,130,246,0.22);
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      opacity: 0.96;
+    }
+
+    .ghost-btn {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      box-shadow: none;
+      color: var(--text);
+    }
+
+    .success-btn {
+      background: linear-gradient(135deg, #16a34a, #22c55e);
+      box-shadow: 0 10px 24px rgba(34,197,94,0.18);
+    }
+
+    .danger-btn {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      box-shadow: 0 10px 24px rgba(239,68,68,0.18);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .stack {
+      display: grid;
+      gap: 14px;
+    }
+
+    .label {
+      font-size: 0.84rem;
+      font-weight: 800;
+      color: #dbeafe;
+      margin-bottom: 6px;
+    }
+
+    .box {
+      padding: 12px 14px;
+      border-radius: 14px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .box-blue { background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.16); }
+    .box-green { background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.16); }
+    .box-red { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.16); }
+    .box-yellow { background: rgba(250,204,21,0.08); border: 1px solid rgba(250,204,21,0.16); }
+
+    .empty-state {
+      color: var(--muted);
+      padding: 10px 2px;
+    }
+
+    .note-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .note-highlight {
+      border-left: 4px solid rgba(250, 204, 21, 0.9);
+    }
+
+    .note-danger {
+      border-left: 4px solid rgba(239, 68, 68, 0.9);
+    }
+
+    .retry-layout {
+      display: grid;
+      gap: 14px;
+    }
+
+    .reviewed {
+      opacity: 0.55;
+      filter: grayscale(40%);
+    }
+
+    .collapsed .note-detail {
+      display: none;
+    }
+
+    .toggle-btn {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      box-shadow: none;
+      font-size: 12px;
+      padding: 6px 10px;
+      color: #dbeafe;
+    }
+
+    .point-strong {
+      font-size: 1.8rem;
+      font-weight: 800;
+      margin-bottom: 6px;
+      color: var(--name-accent);
+    }
+
+    .point-sub {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    @media (max-width: 1200px) {
+      .hero-inner,
+      .page-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 1100px) {
+      .summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 700px) {
+      .hero-stats,
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 560px) {
+      body {
+        padding: 14px 10px 36px;
+      }
+
+      .hero,
+      .sidebar,
+      .main-panel {
+        padding: 16px;
+      }
+
+      .hero h1 {
+        font-size: 1.9rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <section id="heroSection" class="hero glass">
+    <div class="hero-topbar">
+      <div id="userChip" class="user-chip">사용자 확인 중...</div>
+      <button class="theme-toggle" onclick="toggleTheme()">☀️ / 🌙 화면 밝기 전환</button>
+      <button class="theme-toggle" onclick="location.href='index.html'">대시보드</button>
+      <button class="theme-toggle" onclick="location.href='study.html'">학습</button>
+      <button class="theme-toggle" onclick="location.href='shop.html'">상점</button>
+      <button class="theme-toggle" onclick="location.href='admin.html'">관리자</button>
+      <button class="theme-toggle" onclick="logout()">로그아웃</button>
+    </div>
+
+    <div class="hero-inner">
+      <div>
+        <div style="display:flex; align-items:center; flex-wrap:wrap; gap:8px;">
+          <div class="hero-badge">📝 Exam Workspace</div>
+          <div id="activeBadgeView"></div>
+        </div>
+
+        <h1>
+          시험 시스템<br>
+          <span>응시 / 결과 / 오답노트</span>
+        </h1>
+        <p>
+          객관식과 코드 문제를 풀고, 결과 리포트와 오답노트, 다시풀기, 추천 흐름까지
+          한 페이지에서 관리할 수 있습니다.
+        </p>
+
+        <div class="hero-stats">
+          <div class="mini-card">
+            <strong>Exam Solve</strong>
+            <span>시험 응시와 진행률 확인</span>
+          </div>
+          <div class="mini-card">
+            <strong>Result Report</strong>
+            <span>정답/오답/부분정답 리포트</span>
+          </div>
+          <div class="mini-card">
+            <strong>Wrong Notes</strong>
+            <span>오답노트와 다시풀기</span>
+          </div>
+        </div>
+      </div>
+
+      <aside class="hero-panel">
+        <h2>Page Focus</h2>
+        <p>
+          시험 전용 페이지입니다. 목록 선택, 응시, 제출, 결과 확인, 오답 복습까지
+          한 흐름으로 정리했습니다.
+        </p>
+        <div class="pill-row">
+          <span>Multiple Choice</span>
+          <span>Code Test</span>
+          <span>Wrong Note</span>
+          <span>Retry</span>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section class="page-grid">
+    <aside class="sidebar glass">
+      <div class="section-head">
+        <h2>시험 목록</h2>
+      </div>
+      <div class="section-sub">응시할 시험을 선택하세요.</div>
+
+      <div class="point-card" style="margin-bottom:14px;">
+        <h3>현재 포인트</h3>
+        <div id="currentPointBox">
+          <div class="point-strong">0P</div>
+          <div class="point-sub">불러오는 중...</div>
+        </div>
+      </div>
+
+      <div class="point-card" style="margin-bottom:14px;">
+        <h3>적용 중인 꾸미기</h3>
+        <div id="activeCustomBox">불러오는 중...</div>
+      </div>
+
+      <div id="examList" class="exam-list"></div>
+    </aside>
+
+    <main class="main-panel glass">
+      <div id="beforeStartView">
+        <div class="section-head">
+          <h2>시험 안내</h2>
+        </div>
+        <div class="section-sub">왼쪽에서 시험을 선택하면 시험이 시작됩니다.</div>
+
+        <div class="stack">
+          <div class="summary-grid">
+            <div class="summary-card">
+              <strong id="summaryExamCount">0</strong>
+              <span>등록된 시험 수</span>
+            </div>
+            <div class="summary-card">
+              <strong id="summaryRecentScore">-</strong>
+              <span>최근 시험 점수</span>
+            </div>
+            <div class="summary-card">
+              <strong id="summaryWrongCount">-</strong>
+              <span>최근 오답 수</span>
+            </div>
+            <div class="summary-card">
+              <strong id="summaryWrongNoteCount">-</strong>
+              <span>현재 필터 기준 오답노트 수</span>
+            </div>
+          </div>
+
+          <div id="insightBox" class="stack"></div>
+        </div>
+      </div>
+
+      <div id="examSolveView" class="hidden">
+        <div class="section-head">
+          <h2 id="examTitle">시험 제목</h2>
+          <div class="badge-row">
+            <span class="badge badge-exam" id="examDifficulty">난이도</span>
+            <span class="badge badge-score" id="examProgress">0 / 0</span>
+          </div>
+        </div>
+
+        <div class="question-nav" id="questionNav"></div>
+        <div id="questionContainer"></div>
+
+        <div class="question-actions">
+          <button class="ghost-btn" onclick="prevQuestion()">이전 문제</button>
+          <button class="ghost-btn" onclick="nextQuestion()">다음 문제</button>
+          <button class="success-btn" onclick="submitExam()">시험 제출</button>
+        </div>
+      </div>
+
+      <div id="examResultView" class="hidden">
+        <div class="section-head">
+          <h2>채점 결과 리포트</h2>
+          <div class="badge-row">
+            <span class="badge badge-score" id="resultSubmittedAt">방금 제출</span>
+          </div>
+        </div>
+
+        <div class="summary-grid">
+          <div class="summary-card">
+            <strong id="totalScoreBox">0</strong>
+            <span>총점</span>
+          </div>
+          <div class="summary-card">
+            <strong id="correctCountBox">0</strong>
+            <span>정답</span>
+          </div>
+          <div class="summary-card">
+            <strong id="wrongCountBox">0</strong>
+            <span>오답</span>
+          </div>
+          <div class="summary-card">
+            <strong id="partialCountBox">0</strong>
+            <span>부분정답</span>
+          </div>
+        </div>
+
+        <div id="pointRewardBox" class="box box-green" style="margin-bottom:18px;">포인트 정보를 불러오는 중...</div>
+
+        <div class="question-actions" style="margin-bottom:18px;">
+          <button class="ghost-btn" onclick="restartExamArea()">다른 시험 선택</button>
+          <button class="ghost-btn" onclick="loadWrongNotes()">오답노트 새로고침</button>
+        </div>
+
+        <div id="resultList" class="stack"></div>
+
+        <div style="margin-top:28px;">
+          <div class="section-head">
+            <h2>오답노트</h2>
+          </div>
+          <div class="section-sub">틀린 문제와 부분정답 문제를 자동 저장합니다.</div>
+
+          <div class="filter-row">
+            <button id="filter-all" class="active-filter" onclick="setWrongNoteFilter('all')">전체</button>
+            <button id="filter-pending" onclick="setWrongNoteFilter('pending')">미복습</button>
+            <button id="filter-reviewed" onclick="setWrongNoteFilter('reviewed')">복습완료</button>
+          </div>
+
+          <div id="wrongNoteList" class="stack"></div>
+        </div>
+      </div>
+
+      <div id="retryView" class="hidden">
+        <div class="section-head">
+          <h2>오답 다시풀기</h2>
+          <div class="badge-row">
+            <span class="badge badge-exam" id="retryTypeBadge">question</span>
+          </div>
+        </div>
+
+        <div id="retryContainer" class="retry-layout"></div>
+
+        <div class="question-actions">
+          <button class="ghost-btn" onclick="cancelRetry()">취소</button>
+          <button class="success-btn" onclick="submitRetry()">다시 제출</button>
+        </div>
+      </div>
+    </main>
+  </section>
+
+  <script>
+    const API_BASE = "http://127.0.0.1:8000";
+
+    let examListData = [];
+    let currentExamId = null;
+    let currentExam = null;
+    let currentQuestions = [];
+    let currentQuestionIndex = 0;
+    let answers = {};
+    let retryNote = null;
+    let wrongNoteFilter = "all";
+    let currentUser = null;
+    let profileCustomState = null;
+
+    function escapeHtml(text) {
+      return String(text ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;");
+    }
+
+    function escapeJs(text) {
+      return String(text ?? "")
+        .replaceAll("\\", "\\\\")
+        .replaceAll("'", "\\'")
+        .replaceAll('"', '\\"')
+        .replaceAll("\n", "\\n")
+        .replaceAll("\r", "");
+    }
+
+    function getLoggedInUser() {
+      const raw = localStorage.getItem("loggedInUser");
+      if (!raw) return null;
+
+      try {
+        return JSON.parse(raw);
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function requireLogin() {
+      currentUser = getLoggedInUser();
+
+      if (!currentUser || !currentUser.id) {
+        localStorage.removeItem("loggedInUser");
+        location.href = "login.html";
+        return false;
+      }
+
+      return true;
+    }
+
+    function getUserId() {
+      return currentUser?.id;
+    }
+
+    function updateUserChip() {
+      const chip = document.getElementById("userChip");
+      if (!currentUser) {
+        chip.innerText = "로그인 정보 없음";
+        return;
+      }
+
+      chip.innerText = `👤 ${currentUser.username} (${currentUser.email})`;
+    }
+
+    function logout() {
+      localStorage.removeItem("loggedInUser");
+      location.href = "login.html";
+    }
+
+    function applyTheme(theme) {
+      document.documentElement.setAttribute("data-theme", theme);
+      localStorage.setItem("theme", theme);
+    }
+
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute("data-theme") || "dark";
+      applyTheme(current === "dark" ? "light" : "dark");
+    }
+
+    function initTheme() {
+      const saved = localStorage.getItem("theme") || "dark";
+      applyTheme(saved);
+    }
+
+    function clearCustomVisuals() {
+      document.body.classList.remove(
+        "custom-background-space",
+        "custom-background-sunset",
+        "custom-background-aurora",
+        "custom-background-matrix",
+        "custom-background-midnight_city",
+        "card-skin-glass-strong",
+        "card-skin-soft-light",
+        "card-skin-outline-neon"
+      );
+
+      document.getElementById("heroSection").classList.remove(
+        "custom-theme-blue_neon",
+        "custom-theme-purple_galaxy",
+        "custom-theme-emerald_forest",
+        "custom-theme-crimson_sunset",
+        "custom-theme-silver_minimal"
+      );
+
+      document.getElementById("activeBadgeView").innerHTML = "";
+      document.documentElement.style.setProperty("--name-accent", "inherit");
+    }
+
+    function renderBadge(badgeStyle) {
+      const badgeView = document.getElementById("activeBadgeView");
+
+      if (badgeStyle === "gold_dev") {
+        badgeView.innerHTML = `<span class="profile-badge gold_dev">🏆 골드 개발자</span>`;
+      } else if (badgeStyle === "master_coder") {
+        badgeView.innerHTML = `<span class="profile-badge master_coder">👑 마스터 코더</span>`;
+      } else if (badgeStyle === "bug_hunter") {
+        badgeView.innerHTML = `<span class="profile-badge bug_hunter">🛠 버그 헌터</span>`;
+      } else if (badgeStyle === "exam_ace") {
+        badgeView.innerHTML = `<span class="profile-badge exam_ace">📘 시험 에이스</span>`;
+      } else if (badgeStyle === "streak_master") {
+        badgeView.innerHTML = `<span class="profile-badge streak_master">🔥 스트릭 마스터</span>`;
+      } else {
+        badgeView.innerHTML = "";
+      }
+    }
+
+    function applyProfileCustomToUI(custom) {
+      clearCustomVisuals();
+      profileCustomState = custom;
+
+      if (!custom) return;
+
+      if (custom.background_style === "space") {
+        document.body.classList.add("custom-background-space");
+      } else if (custom.background_style === "sunset") {
+        document.body.classList.add("custom-background-sunset");
+      } else if (custom.background_style === "aurora") {
+        document.body.classList.add("custom-background-aurora");
+      } else if (custom.background_style === "matrix") {
+        document.body.classList.add("custom-background-matrix");
+      } else if (custom.background_style === "midnight_city") {
+        document.body.classList.add("custom-background-midnight_city");
+      }
+
+      if (custom.theme_style === "blue_neon") {
+        document.getElementById("heroSection").classList.add("custom-theme-blue_neon");
+      } else if (custom.theme_style === "purple_galaxy") {
+        document.getElementById("heroSection").classList.add("custom-theme-purple_galaxy");
+      } else if (custom.theme_style === "emerald_forest") {
+        document.getElementById("heroSection").classList.add("custom-theme-emerald_forest");
+      } else if (custom.theme_style === "crimson_sunset") {
+        document.getElementById("heroSection").classList.add("custom-theme-crimson_sunset");
+      } else if (custom.theme_style === "silver_minimal") {
+        document.getElementById("heroSection").classList.add("custom-theme-silver_minimal");
+      }
+
+      renderBadge(custom.badge_style);
+
+      if (custom.name_color_style === "sky") {
+        document.documentElement.style.setProperty("--name-accent", "#7dd3fc");
+      } else if (custom.name_color_style === "lime") {
+        document.documentElement.style.setProperty("--name-accent", "#bef264");
+      } else if (custom.name_color_style === "pink") {
+        document.documentElement.style.setProperty("--name-accent", "#f9a8d4");
+      } else if (custom.name_color_style === "gold") {
+        document.documentElement.style.setProperty("--name-accent", "#fde68a");
+      }
+
+      if (custom.card_skin_style === "glass_strong") {
+        document.body.classList.add("card-skin-glass-strong");
+      } else if (custom.card_skin_style === "soft_light") {
+        document.body.classList.add("card-skin-soft-light");
+      } else if (custom.card_skin_style === "outline_neon") {
+        document.body.classList.add("card-skin-outline-neon");
+      }
+    }
+
+    async function loadProfileCustom() {
+      try {
+        const res = await fetch(`${API_BASE}/profile/custom?user_id=${getUserId()}`);
+        const data = await res.json();
+        const custom = data.custom || null;
+
+        applyProfileCustomToUI(custom);
+
+        document.getElementById("activeCustomBox").innerHTML = `
+현재 테마: ${custom?.theme_name || "기본"}
+현재 배지: ${custom?.badge_name || "없음"}
+현재 배경: ${custom?.background_name || "기본"}
+현재 닉네임 컬러: ${custom?.name_color_name || "기본"}
+현재 카드 스킨: ${custom?.card_skin_name || "기본"}
+        `;
+      } catch (e) {
+        document.getElementById("activeCustomBox").innerText = "적용 중인 꾸미기 정보를 불러오지 못했습니다.";
+      }
+    }
+
+    async function loadCurrentPoints() {
+      try {
+        const res = await fetch(`${API_BASE}/points?user_id=${getUserId()}`);
+        const data = await res.json();
+
+        document.getElementById("currentPointBox").innerHTML = `
+          <div class="point-strong">${data.total_points ?? 0}P</div>
+          <div class="point-sub">시험 제출과 성과에 따라 포인트를 획득할 수 있어요.</div>
+        `;
+      } catch (e) {
+        document.getElementById("currentPointBox").innerHTML = `
+          <div class="point-strong">-</div>
+          <div class="point-sub">포인트 정보를 불러오지 못했습니다.</div>
+        `;
+      }
+    }
+
+    function renderPointReward(data) {
+      const box = document.getElementById("pointRewardBox");
+      const rewards = Array.isArray(data.awarded_points) ? data.awarded_points : [];
+      const totalPoints = data.total_points ?? 0;
+
+      if (rewards.length === 0) {
+        box.innerHTML = `현재 총 포인트: ${totalPoints}P`;
+        return;
+      }
+
+      box.innerHTML = `
+이번 시험으로 획득한 포인트
+${rewards.map(item => `+${item.amount}P / ${item.reason}`).join("\n")}
+
+현재 총 포인트: ${totalPoints}P
+      `;
+
+      loadCurrentPoints();
+    }
+
+    function getRetryExamId(note) {
+      if (note.exam_set_id) return note.exam_set_id;
+
+      const matchedExam = examListData.find(x => x.title === note.exam_title);
+      return matchedExam ? matchedExam.id : null;
+    }
+
+    async function initPage() {
+      initTheme();
+
+      if (!requireLogin()) return;
+      updateUserChip();
+
+      await loadProfileCustom();
+      await loadCurrentPoints();
+      await loadExams();
+      await loadExamInsights();
+      await loadExamResultsSummary();
+      await loadWrongNotes();
+    }
+
+    async function loadExamInsights() {
+      try {
+        const res = await fetch(`${API_BASE}/exam-insights?user_id=${getUserId()}`);
+        const data = await res.json();
+        const recommendations = Array.isArray(data.recommendations) ? data.recommendations : [];
+        const insightBox = document.getElementById("insightBox");
+
+        insightBox.innerHTML = `
+          <div class="insight-card">
+            <h3>난이도 자동 분석</h3>
+            <div class="label">권장 난이도</div>
+            <div class="box box-blue">${escapeHtml(data.recommended_difficulty || "easy")}</div>
+
+            <div class="label" style="margin-top:10px;">분석 이유</div>
+            <div class="box box-yellow">${escapeHtml(data.difficulty_reason || "")}</div>
+          </div>
+
+          <div class="insight-card">
+            <h3>시험 추천 시스템</h3>
+            <div class="label">추천 이유</div>
+            <div class="box box-blue">${escapeHtml(data.recommendation_reason || "")}</div>
+
+            <div class="label" style="margin-top:10px;">추천 시험</div>
+            <div class="box">
+${
+  recommendations.length > 0
+    ? recommendations.map(item => `- ${item.title} (${item.difficulty})`).join("\n")
+    : "추천 시험이 없습니다."
+}
+            </div>
+          </div>
+        `;
+      } catch (e) {
+        document.getElementById("insightBox").innerHTML = `
+          <div class="insight-card">
+            <div class="box box-red">분석 정보를 불러오지 못했습니다.</div>
+          </div>
+        `;
+      }
+    }
+
+    async function loadExams() {
+      try {
+        const res = await fetch(`${API_BASE}/exams`);
+        const data = await res.json();
+
+        examListData = Array.isArray(data.exams) ? data.exams : [];
+        document.getElementById("summaryExamCount").innerText = examListData.length;
+
+        const list = document.getElementById("examList");
+        if (examListData.length === 0) {
+          list.innerHTML = `<div class="empty-state">등록된 시험이 없습니다.</div>`;
+          return;
+        }
+
+        list.innerHTML = examListData.map(exam => `
+          <div class="exam-card">
+            <h3>${escapeHtml(exam.title)}</h3>
+            <div class="meta">난이도: ${escapeHtml(exam.difficulty || "medium")}</div>
+            <div class="meta" style="margin-top:6px;">${escapeHtml(exam.description || "")}</div>
+            <div class="badge-row">
+              <span class="badge badge-exam">Exam</span>
+            </div>
+            <button onclick="startExam(${exam.id})">시험 시작</button>
+          </div>
+        `).join("");
+      } catch (e) {
+        document.getElementById("examList").innerHTML = `<div class="empty-state">시험 목록을 불러오지 못했습니다.</div>`;
+        document.getElementById("summaryExamCount").innerText = "-";
+      }
+    }
+
+    async function startExam(examId) {
+      try {
+        const res = await fetch(`${API_BASE}/exams/${examId}`);
+        const data = await res.json();
+
+        if (!data.exam) {
+          alert(data.message || "시험 정보를 불러오지 못했습니다.");
+          return;
+        }
+
+        currentExamId = examId;
+        currentExam = data.exam;
+        currentQuestions = Array.isArray(data.questions) ? data.questions : [];
+        currentQuestionIndex = 0;
+        answers = {};
+        retryNote = null;
+
+        document.getElementById("beforeStartView").classList.add("hidden");
+        document.getElementById("examResultView").classList.add("hidden");
+        document.getElementById("retryView").classList.add("hidden");
+        document.getElementById("examSolveView").classList.remove("hidden");
+
+        document.getElementById("examTitle").innerText = currentExam.title;
+        document.getElementById("examDifficulty").innerText = `난이도: ${currentExam.difficulty || "medium"}`;
+
+        renderQuestionNav();
+        renderCurrentQuestion();
+      } catch (e) {
+        alert("시험 정보를 불러오는 중 오류가 발생했습니다.");
+      }
+    }
+
+    function renderQuestionNav() {
+      const nav = document.getElementById("questionNav");
+      nav.innerHTML = "";
+
+      currentQuestions.forEach((q, index) => {
+        const hasAnswer = isAnswered(q);
+        const btn = document.createElement("button");
+        btn.innerText = index + 1;
+        btn.className = index === currentQuestionIndex ? "active" : "";
+        btn.classList.add(hasAnswer ? "answered" : "not-answered");
+        btn.onclick = () => {
+          currentQuestionIndex = index;
+          renderQuestionNav();
+          renderCurrentQuestion();
+        };
+        nav.appendChild(btn);
+      });
+
+      document.getElementById("examProgress").innerText =
+        `${countAnsweredQuestions()} / ${currentQuestions.length} 문제 응답`;
+    }
+
+    function renderCurrentQuestion() {
+      const q = currentQuestions[currentQuestionIndex];
+      const container = document.getElementById("questionContainer");
+
+      if (!q) {
+        container.innerHTML = `<div class="box box-red">문제를 불러오지 못했습니다.</div>`;
+        return;
+      }
+
+      let html = `
+        <div class="question-card">
+          <h3>문제 ${currentQuestionIndex + 1}. ${escapeHtml(q.question_text)}</h3>
+          <div class="meta">유형: ${q.question_type === "multiple" ? "객관식" : "코드 문제"} / 배점: ${q.score}점</div>
+      `;
+
+      if (q.question_type === "multiple") {
+        html += `<div class="options">`;
+        html += (q.options || []).map(option => `
+          <label class="option-item">
+            <input
+              type="radio"
+              name="question-${q.id}"
+              value="${escapeHtml(option)}"
+              ${answers[q.id]?.answer === option ? "checked" : ""}
+              onchange="saveMultipleAnswer(${q.id}, '${escapeJs(option)}')"
+            >
+            ${escapeHtml(option)}
+          </label>
+        `).join("");
+        html += `</div>`;
+      }
+
+      if (q.question_type === "code") {
+        const codeValue = answers[q.id]?.code ?? q.starter_code ?? "";
+        html += `
+          <textarea id="codeAnswer" oninput="saveCodeAnswer(${q.id}, this.value)">${escapeHtml(codeValue)}</textarea>
+        `;
+      }
+
+      html += `</div>`;
+      container.innerHTML = html;
+    }
+
+    function saveMultipleAnswer(questionId, option) {
+      answers[questionId] = {
+        question_id: questionId,
+        answer: option
+      };
+      renderQuestionNav();
+    }
+
+    function saveCodeAnswer(questionId, value) {
+      answers[questionId] = {
+        question_id: questionId,
+        code: value
+      };
+      renderQuestionNav();
+    }
+
+    function isAnswered(question) {
+      const item = answers[question.id];
+      if (!item) return false;
+
+      if (question.question_type === "multiple") {
+        return !!(item.answer || "").trim();
+      }
+
+      if (question.question_type === "code") {
+        return !!(item.code || "").trim();
+      }
+
+      return false;
+    }
+
+    function countAnsweredQuestions() {
+      return currentQuestions.filter(q => isAnswered(q)).length;
+    }
+
+    function prevQuestion() {
+      if (currentQuestionIndex > 0) {
+        currentQuestionIndex--;
+        renderQuestionNav();
+        renderCurrentQuestion();
+      }
+    }
+
+    function nextQuestion() {
+      if (currentQuestionIndex < currentQuestions.length - 1) {
+        currentQuestionIndex++;
+        renderQuestionNav();
+        renderCurrentQuestion();
+      }
+    }
+
+    async function submitExam() {
+      if (!currentExamId) {
+        alert("시험을 먼저 선택하세요.");
+        return;
+      }
+
+      const payloadAnswers = currentQuestions.map(q => {
+        const saved = answers[q.id];
+
+        if (q.question_type === "multiple") {
+          return {
+            question_id: q.id,
+            answer: saved?.answer ?? ""
+          };
+        }
+
+        if (q.question_type === "code") {
+          return {
+            question_id: q.id,
+            code: saved?.code ?? ""
+          };
+        }
+
+        return { question_id: q.id };
+      });
+
+      try {
+        const res = await fetch(`${API_BASE}/exams/${currentExamId}/submit`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            user_id: getUserId(),
+            answers: payloadAnswers
+          })
+        });
+
+        const data = await res.json();
+
+        if (!data.detail_result) {
+          alert(data.message || "제출에 실패했습니다.");
+          return;
+        }
+
+        renderResultReport(data);
+        renderPointReward(data);
+        await loadCurrentPoints();
+        await loadExamInsights();
+        await loadWrongNotes();
+        await loadExamResultsSummary();
+      } catch (e) {
+        alert("시험 제출 중 오류가 발생했습니다.");
+      }
+    }
+
+    function summarizeDetail(detail) {
+      let correctCount = 0;
+      let wrongCount = 0;
+      let partialCount = 0;
+
+      detail.forEach(item => {
+        if (item.question_type === "multiple") {
+          if (item.is_correct) correctCount++;
+          else wrongCount++;
+          return;
+        }
+
+        if (item.question_type === "code") {
+          const judge = item.judge_result || {};
+          const passed = judge.passed_count || 0;
+          const total = judge.total_count || 0;
+
+          if (total > 0 && passed === total) {
+            correctCount++;
+          } else if (passed > 0 && passed < total) {
+            partialCount++;
+          } else {
+            wrongCount++;
+          }
+        }
+      });
+
+      return { correctCount, wrongCount, partialCount };
+    }
+
+    function renderResultReport(data) {
+      document.getElementById("examSolveView").classList.add("hidden");
+      document.getElementById("retryView").classList.add("hidden");
+      document.getElementById("examResultView").classList.remove("hidden");
+
+      const detail = Array.isArray(data.detail_result) ? data.detail_result : [];
+      const summary = summarizeDetail(detail);
+
+      document.getElementById("totalScoreBox").innerText = data.total_score ?? 0;
+      document.getElementById("correctCountBox").innerText = summary.correctCount;
+      document.getElementById("wrongCountBox").innerText = summary.wrongCount;
+      document.getElementById("partialCountBox").innerText = summary.partialCount;
+      document.getElementById("resultSubmittedAt").innerText = escapeHtml(data.submitted_at || "채점 완료");
+
+      const list = document.getElementById("resultList");
+
+      if (detail.length === 0) {
+        list.innerHTML = `<div class="empty-state">표시할 채점 결과가 없습니다.</div>`;
+        return;
+      }
+
+      list.innerHTML = detail.map((item, index) => {
+        let statusBadge = "";
+        let statusBoxClass = "box-blue";
+        let reviewText = "";
+
+        if (item.question_type === "multiple") {
+          if (item.is_correct) {
+            statusBadge = `<span class="badge badge-correct">정답</span>`;
+            statusBoxClass = "box-green";
+            reviewText = "개념을 정확히 이해하고 있습니다.";
+          } else {
+            statusBadge = `<span class="badge badge-wrong">오답</span>`;
+            statusBoxClass = "box-red";
+            reviewText = item.analysis || "정답과 내가 선택한 답을 비교해서 개념 차이를 복습하세요.";
+          }
+        } else {
+          const judge = item.judge_result || {};
+          const passed = judge.passed_count || 0;
+          const total = judge.total_count || 0;
+
+          if (total > 0 && passed === total) {
+            statusBadge = `<span class="badge badge-correct">정답</span>`;
+            statusBoxClass = "box-green";
+            reviewText = "모든 테스트케이스를 통과했습니다.";
+          } else if (passed > 0 && passed < total) {
+            statusBadge = `<span class="badge badge-partial">부분정답</span>`;
+            statusBoxClass = "box-yellow";
+            reviewText = item.analysis || "일부 테스트케이스만 통과했습니다. 실패 케이스를 확인하세요.";
+          } else {
+            statusBadge = `<span class="badge badge-wrong">오답</span>`;
+            statusBoxClass = "box-red";
+            reviewText = item.analysis || "실패한 테스트케이스와 오류 메시지를 확인하세요.";
+          }
+        }
+
+        let bodyHtml = `
+          <div class="result-card">
+            <div class="section-head">
+              <h3>문제 ${index + 1}</h3>
+              <div class="badge-row">${statusBadge}</div>
+            </div>
+            <div class="meta">${escapeHtml(item.question_text || "")}</div>
+            <div class="box ${statusBoxClass}" style="margin-top:12px;">${escapeHtml(reviewText)}</div>
+        `;
+
+        if (item.question_type === "multiple") {
+          bodyHtml += `
+            <div class="box" style="margin-top:12px;">내 답: ${escapeHtml(item.user_answer || "(없음)")}</div>
+            <div class="box" style="margin-top:8px;">정답: ${escapeHtml(item.correct_answer || "")}</div>
+          `;
+        } else {
+          const judge = item.judge_result || {};
+          bodyHtml += `
+            <div class="box" style="margin-top:12px;">통과 테스트: ${judge.passed_count || 0} / ${judge.total_count || 0}</div>
+            <div class="box" style="margin-top:8px;">입력 코드:
+${escapeHtml(item.user_code || "(없음)")}</div>
+          `;
+        }
+
+        bodyHtml += `</div>`;
+        return bodyHtml;
+      }).join("");
+    }
+
+    function restartExamArea() {
+      currentExamId = null;
+      currentExam = null;
+      currentQuestions = [];
+      currentQuestionIndex = 0;
+      answers = {};
+      retryNote = null;
+
+      document.getElementById("examSolveView").classList.add("hidden");
+      document.getElementById("examResultView").classList.add("hidden");
+      document.getElementById("retryView").classList.add("hidden");
+      document.getElementById("beforeStartView").classList.remove("hidden");
+    }
+
+    function setWrongNoteFilter(filter) {
+      wrongNoteFilter = filter;
+
+      document.getElementById("filter-all").classList.remove("active-filter");
+      document.getElementById("filter-pending").classList.remove("active-filter");
+      document.getElementById("filter-reviewed").classList.remove("active-filter");
+
+      if (filter === "all") document.getElementById("filter-all").classList.add("active-filter");
+      if (filter === "pending") document.getElementById("filter-pending").classList.add("active-filter");
+      if (filter === "reviewed") document.getElementById("filter-reviewed").classList.add("active-filter");
+
+      loadWrongNotes();
+    }
+
+    async function loadWrongNotes() {
+      try {
+        const res = await fetch(`${API_BASE}/wrong-notes?user_id=${getUserId()}`);
+        const data = await res.json();
+        const notes = Array.isArray(data.wrong_notes) ? data.wrong_notes : [];
+        const list = document.getElementById("wrongNoteList");
+
+        let filtered = notes;
+        if (wrongNoteFilter === "pending") {
+          filtered = notes.filter(n => !n.is_reviewed);
+        } else if (wrongNoteFilter === "reviewed") {
+          filtered = notes.filter(n => n.is_reviewed);
+        }
+
+        document.getElementById("summaryWrongNoteCount").innerText = filtered.length;
+
+        if (filtered.length === 0) {
+          list.innerHTML = `<div class="empty-state">표시할 오답노트가 없습니다.</div>`;
+          return;
+        }
+
+        list.innerHTML = filtered.map(note => {
+          const reviewedClass = note.is_reviewed ? "reviewed" : "";
+          const noteClass = note.status === "partial" ? "note-highlight" : "note-danger";
+          const badgeStatus = note.status === "partial"
+            ? `<span class="badge badge-partial">부분정답</span>`
+            : `<span class="badge badge-wrong">오답</span>`;
+
+          const reviewBadge = note.is_reviewed
+            ? `<span class="badge badge-reviewed">복습완료</span>`
+            : `<span class="badge badge-pending">미복습</span>`;
+
+          return `
+            <div class="wrong-note-card ${reviewedClass} ${noteClass}">
+              <div class="section-head">
+                <h3>${escapeHtml(note.exam_title || "시험")}</h3>
+                <div class="badge-row">
+                  ${badgeStatus}
+                  ${reviewBadge}
+                </div>
+              </div>
+
+              <div class="meta">${escapeHtml(note.question_text || "")}</div>
+
+              <div class="note-detail" style="margin-top:12px;">
+                ${
+                  note.question_type === "multiple"
+                    ? `<div class="box">내 답: ${escapeHtml(note.user_answer || "(없음)")}</div>
+                       <div class="box" style="margin-top:8px;">정답: ${escapeHtml(note.correct_answer || "")}</div>`
+                    : `<div class="box">입력 코드:
+${escapeHtml(note.user_code || "(없음)")}</div>`
+                }
+
+                <div class="box box-yellow" style="margin-top:8px;">기본 분석:
+${escapeHtml(note.review_note || "")}</div>
+
+                ${
+                  note.ai_explanation
+                    ? `<div class="box box-blue" style="margin-top:8px;">AI 설명:
+${escapeHtml(note.ai_explanation)}</div>`
+                    : ""
+                }
+              </div>
+
+              <div class="question-actions">
+                <button class="toggle-btn" onclick="toggleWrongNoteDetail(this)">접기/펼치기</button>
+                <button class="ghost-btn" onclick="openRetry(${note.id})">다시풀기</button>
+                ${
+                  note.is_reviewed
+                    ? `<button class="ghost-btn" onclick="markWrongNoteReviewed(${note.id}, false)">복습취소</button>`
+                    : `<button class="success-btn" onclick="markWrongNoteReviewed(${note.id}, true)">복습완료 체크</button>`
+                }
+              </div>
+            </div>
+          `;
+        }).join("");
+      } catch (e) {
+        document.getElementById("wrongNoteList").innerHTML = `<div class="empty-state">오답노트를 불러오지 못했습니다.</div>`;
+      }
+    }
+
+    function toggleWrongNoteDetail(btn) {
+      const card = btn.closest(".wrong-note-card");
+      card.classList.toggle("collapsed");
+    }
+
+    async function markWrongNoteReviewed(noteId, value) {
+      try {
+        const res = await fetch(`${API_BASE}/wrong-notes/${noteId}/review`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            user_id: getUserId(),
+            is_reviewed: value
+          })
+        });
+
+        const data = await res.json();
+        alert(data.message || "처리 완료");
+        await loadWrongNotes();
+        await loadExamInsights();
+      } catch (e) {
+        alert("오답노트 상태 변경 중 오류가 발생했습니다.");
+      }
+    }
+
+    async function openRetry(noteId) {
+      try {
+        const res = await fetch(`${API_BASE}/wrong-notes?user_id=${getUserId()}`);
+        const data = await res.json();
+        const notes = Array.isArray(data.wrong_notes) ? data.wrong_notes : [];
+        const note = notes.find(n => n.id === noteId);
+
+        if (!note) {
+          alert("오답 정보를 찾을 수 없습니다.");
+          return;
+        }
+
+        retryNote = note;
+        renderRetryView(note);
+      } catch (e) {
+        alert("다시풀기 화면을 여는 중 오류가 발생했습니다.");
+      }
+    }
+
+    function renderRetryView(note) {
+      document.getElementById("beforeStartView").classList.add("hidden");
+      document.getElementById("examSolveView").classList.add("hidden");
+      document.getElementById("examResultView").classList.add("hidden");
+      document.getElementById("retryView").classList.remove("hidden");
+
+      document.getElementById("retryTypeBadge").innerText =
+        note.question_type === "multiple" ? "객관식" : "코드 문제";
+
+      const container = document.getElementById("retryContainer");
+
+      if (note.question_type === "multiple") {
+        const options = [note.correct_answer, note.user_answer].filter(Boolean);
+        const uniqueOptions = [...new Set(options.length > 0 ? options : ["예시 보기 1", "예시 보기 2"])];
+
+        container.innerHTML = `
+          <div class="retry-card">
+            <h3>${escapeHtml(note.question_text || "")}</h3>
+            <div class="options">
+              ${uniqueOptions.map(option => `
+                <label class="option-item">
+                  <input type="radio" name="retry-answer" value="${escapeHtml(option)}">
+                  ${escapeHtml(option)}
+                </label>
+              `).join("")}
+            </div>
+          </div>
+        `;
+      } else {
+        container.innerHTML = `
+          <div class="retry-card">
+            <h3>${escapeHtml(note.question_text || "")}</h3>
+            <textarea id="retryCodeInput">${escapeHtml(note.user_code || "")}</textarea>
+          </div>
+        `;
+      }
+    }
+
+    function cancelRetry() {
+      retryNote = null;
+      document.getElementById("retryView").classList.add("hidden");
+      document.getElementById("examResultView").classList.remove("hidden");
+    }
+
+    async function submitRetry() {
+      if (!retryNote) {
+        alert("다시풀기 대상이 없습니다.");
+        return;
+      }
+
+      if (retryNote.question_type === "multiple") {
+        const checked = document.querySelector('input[name="retry-answer"]:checked');
+        if (!checked) {
+          alert("답을 선택하세요.");
+          return;
+        }
+
+        const isCorrect = checked.value === retryNote.correct_answer;
+        alert(isCorrect ? "정답입니다!" : "아직 오답입니다.");
+      } else {
+        const code = document.getElementById("retryCodeInput")?.value ?? "";
+        if (!code.trim()) {
+          alert("코드를 입력하세요.");
+          return;
+        }
+        alert("다시 제출이 완료되었습니다. 실제 재채점 확장은 다음 단계에서 연결하면 됩니다.");
+      }
+    }
+
+    async function loadExamResultsSummary() {
+      try {
+        const res = await fetch(`${API_BASE}/exam-results?user_id=${getUserId()}`);
+        const data = await res.json();
+        const results = Array.isArray(data.results) ? data.results : [];
+
+        if (results.length === 0) {
+          document.getElementById("summaryRecentScore").innerText = "-";
+          document.getElementById("summaryWrongCount").innerText = "-";
+          return;
+        }
+
+        const latest = results[0];
+        document.getElementById("summaryRecentScore").innerText = latest.total_score ?? "-";
+
+        let wrongCount = 0;
+        try {
+          const detail = JSON.parse(latest.detail_result || "[]");
+          detail.forEach(item => {
+            if (item.question_type === "multiple" && !item.is_correct) wrongCount++;
+            if (item.question_type === "code") {
+              const judge = item.judge_result || {};
+              if ((judge.passed_count || 0) < (judge.total_count || 0)) wrongCount++;
+            }
+          });
+        } catch (e) {}
+
+        document.getElementById("summaryWrongCount").innerText = wrongCount;
+      } catch (e) {
+        document.getElementById("summaryRecentScore").innerText = "-";
+        document.getElementById("summaryWrongCount").innerText = "-";
+      }
+    }
+
+    async function loadExamResultsOnly() {
+      await loadExamResultsSummary();
+      alert("최근 결과 요약을 새로고침했습니다.");
+    }
+
+    initPage();
+  </script>
+</body>
+</html>
