@@ -1,0 +1,1281 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>상점 / 인벤토리 | AI Developer Assistant</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --panel: rgba(17, 24, 39, 0.82);
+      --line: rgba(255, 255, 255, 0.08);
+      --text: #eef4ff;
+      --muted: #a7b4c8;
+      --primary: #3b82f6;
+      --primary-2: #22d3ee;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --success: #22c55e;
+      --shadow: 0 18px 45px rgba(0, 0, 0, 0.28);
+      --radius: 22px;
+      --card-bg: rgba(255,255,255,0.04);
+      --card-border: rgba(255,255,255,0.08);
+      --hero-grad-1: rgba(15,23,42,0.96);
+      --hero-grad-2: rgba(30,41,59,0.88);
+      --name-accent: inherit;
+    }
+
+    html[data-theme="light"] {
+      --bg: #eef4ff;
+      --panel: rgba(255, 255, 255, 0.92);
+      --line: rgba(15, 23, 42, 0.08);
+      --text: #0f172a;
+      --muted: #475569;
+      --primary: #2563eb;
+      --primary-2: #06b6d4;
+      --warning: #d97706;
+      --danger: #dc2626;
+      --success: #16a34a;
+      --shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+      --card-bg: rgba(15,23,42,0.03);
+      --card-border: rgba(15,23,42,0.08);
+      --hero-grad-1: rgba(255,255,255,0.98);
+      --hero-grad-2: rgba(241,245,249,0.92);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Segoe UI", Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(59,130,246,0.10), transparent 24%),
+        radial-gradient(circle at top right, rgba(34,211,238,0.10), transparent 22%),
+        linear-gradient(180deg, var(--bg) 0%, var(--bg) 100%);
+      max-width: 1480px;
+      margin: 0 auto;
+      padding: 24px 18px 48px;
+      line-height: 1.6;
+      transition: background 0.25s ease, color 0.25s ease;
+    }
+
+    body.custom-background-space {
+      background:
+        radial-gradient(circle at 20% 20%, rgba(99,102,241,0.22), transparent 18%),
+        radial-gradient(circle at 80% 18%, rgba(168,85,247,0.18), transparent 18%),
+        radial-gradient(circle at 50% 80%, rgba(34,211,238,0.14), transparent 20%),
+        linear-gradient(180deg, #060816 0%, #0b1020 55%, #111827 100%);
+    }
+
+    body.custom-background-sunset {
+      background:
+        radial-gradient(circle at 20% 20%, rgba(251,146,60,0.22), transparent 20%),
+        radial-gradient(circle at 80% 18%, rgba(244,114,182,0.16), transparent 18%),
+        linear-gradient(180deg, #1f2937 0%, #7c2d12 45%, #ea580c 100%);
+    }
+
+    body.custom-background-aurora {
+      background:
+        radial-gradient(circle at 18% 20%, rgba(34,197,94,0.18), transparent 20%),
+        radial-gradient(circle at 78% 18%, rgba(59,130,246,0.18), transparent 18%),
+        radial-gradient(circle at 50% 70%, rgba(168,85,247,0.16), transparent 22%),
+        linear-gradient(180deg, #03111f 0%, #0b1b2b 45%, #111827 100%);
+    }
+
+    body.custom-background-matrix {
+      background:
+        radial-gradient(circle at 20% 15%, rgba(34,197,94,0.14), transparent 18%),
+        linear-gradient(180deg, #020b05 0%, #04150b 50%, #0b1220 100%);
+    }
+
+    body.custom-background-midnight_city {
+      background:
+        radial-gradient(circle at 80% 15%, rgba(59,130,246,0.12), transparent 20%),
+        radial-gradient(circle at 20% 20%, rgba(168,85,247,0.10), transparent 18%),
+        linear-gradient(180deg, #0b1020 0%, #111827 45%, #1f2937 100%);
+    }
+
+    .glass {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      backdrop-filter: blur(16px);
+      box-shadow: var(--shadow);
+      border-radius: var(--radius);
+      transition: background 0.25s ease, border-color 0.25s ease;
+    }
+
+    .card-skin-glass-strong .glass,
+    .card-skin-glass-strong .shop-item,
+    .card-skin-glass-strong .inventory-item,
+    .card-skin-glass-strong .mini-card {
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.12);
+    }
+
+    .card-skin-soft-light .glass,
+    .card-skin-soft-light .shop-item,
+    .card-skin-soft-light .inventory-item,
+    .card-skin-soft-light .mini-card {
+      background: rgba(255,255,255,0.06);
+      border-color: rgba(255,255,255,0.10);
+    }
+
+    .card-skin-outline-neon .glass,
+    .card-skin-outline-neon .shop-item,
+    .card-skin-outline-neon .inventory-item,
+    .card-skin-outline-neon .mini-card {
+      border-color: rgba(34,211,238,0.28);
+      box-shadow:
+        0 18px 45px rgba(0, 0, 0, 0.28),
+        0 0 0 1px rgba(59,130,246,0.10) inset;
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: 28px;
+      margin-bottom: 18px;
+      background: linear-gradient(135deg, var(--hero-grad-1), var(--hero-grad-2)), var(--panel);
+    }
+
+    .hero.custom-theme-blue_neon { background: linear-gradient(135deg, rgba(8,47,73,0.98), rgba(14,116,144,0.88)), var(--panel); }
+    .hero.custom-theme-purple_galaxy { background: linear-gradient(135deg, rgba(46,16,101,0.98), rgba(88,28,135,0.88)), var(--panel); }
+    .hero.custom-theme-emerald_forest { background: linear-gradient(135deg, rgba(6,78,59,0.98), rgba(20,83,45,0.90)), var(--panel); }
+    .hero.custom-theme-crimson_sunset { background: linear-gradient(135deg, rgba(127,29,29,0.98), rgba(194,65,12,0.90)), var(--panel); }
+    .hero.custom-theme-silver_minimal { background: linear-gradient(135deg, rgba(51,65,85,0.96), rgba(100,116,139,0.84)), var(--panel); }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 18% 20%, rgba(96,165,250,0.14), transparent 20%),
+        radial-gradient(circle at 82% 24%, rgba(34,211,238,0.10), transparent 18%);
+      pointer-events: none;
+    }
+
+    .hero-topbar {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .theme-toggle {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid var(--line);
+      box-shadow: none;
+      color: var(--text);
+    }
+
+    .user-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 13px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.06);
+      color: var(--name-accent);
+      font-size: 0.88rem;
+      font-weight: 700;
+    }
+
+    .hero-inner {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+      font-size: 0.88rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .profile-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 13px;
+      border-radius: 999px;
+      margin-left: 8px;
+      font-size: 0.84rem;
+      font-weight: 800;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06);
+    }
+
+    .profile-badge.gold_dev {
+      background: rgba(245,158,11,0.18);
+      color: #fde68a;
+      border-color: rgba(245,158,11,0.28);
+    }
+
+    .profile-badge.master_coder {
+      background: rgba(168,85,247,0.18);
+      color: #e9d5ff;
+      border-color: rgba(168,85,247,0.28);
+    }
+
+    .profile-badge.bug_hunter {
+      background: rgba(34,197,94,0.18);
+      color: #bbf7d0;
+      border-color: rgba(34,197,94,0.28);
+    }
+
+    .profile-badge.exam_ace {
+      background: rgba(59,130,246,0.18);
+      color: #bfdbfe;
+      border-color: rgba(59,130,246,0.28);
+    }
+
+    .profile-badge.streak_master {
+      background: rgba(244,114,182,0.18);
+      color: #fbcfe8;
+      border-color: rgba(244,114,182,0.28);
+    }
+
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3.3rem);
+      line-height: 1.08;
+      letter-spacing: -0.04em;
+      margin-bottom: 10px;
+      color: var(--name-accent);
+    }
+
+    .hero h1 span {
+      background: linear-gradient(135deg, #7dd3fc, #93c5fd, #67e8f9);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero p {
+      color: var(--muted);
+      max-width: 760px;
+      margin-bottom: 16px;
+      font-size: 0.98rem;
+    }
+
+    .hero-stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .mini-card, .hero-panel {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+    }
+
+    .mini-card { padding: 16px; }
+    .hero-panel { padding: 18px; }
+
+    .mini-card strong {
+      display: block;
+      font-size: 1rem;
+      margin-bottom: 4px;
+      color: var(--name-accent);
+    }
+
+    .mini-card span {
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .hero-panel h2 {
+      font-size: 1.08rem;
+      margin-bottom: 8px;
+      color: var(--name-accent);
+    }
+
+    .hero-panel p {
+      margin-bottom: 10px;
+      color: var(--muted);
+      font-size: 0.93rem;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+
+    .pill-row span {
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      font-size: 0.8rem;
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .summary-card {
+      padding: 16px;
+      border-radius: 18px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+    }
+
+    .summary-card strong {
+      display: block;
+      font-size: 1rem;
+      margin-bottom: 4px;
+      color: var(--name-accent);
+    }
+
+    .point-box,
+    .info-box {
+      margin-top: 8px;
+      padding: 14px;
+      border-radius: 14px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      white-space: pre-wrap;
+      word-break: break-word;
+      min-height: 88px;
+    }
+
+    .point-strong {
+      font-size: 1.8rem;
+      font-weight: 800;
+      margin-bottom: 6px;
+      color: var(--name-accent);
+    }
+
+    .point-sub {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .page-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .card {
+      padding: 18px;
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .section-head h2 {
+      font-size: 1.08rem;
+      letter-spacing: -0.02em;
+      color: var(--name-accent);
+    }
+
+    .section-sub {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-bottom: 10px;
+    }
+
+    .tab-row {
+      display: flex;
+      gap: 7px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .tab-btn {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      box-shadow: none;
+      color: var(--text);
+      padding: 7px 11px;
+      font-size: 0.82rem;
+    }
+
+    .tab-btn.active-tab {
+      outline: 2px solid rgba(125,211,252,0.8);
+      background: rgba(59,130,246,0.14);
+    }
+
+    .shop-scroll,
+    .inventory-scroll {
+      max-height: 620px;
+      min-height: 620px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .shop-grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .shop-item,
+    .inventory-item {
+      padding: 14px;
+      border-radius: 16px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+    }
+
+    .item-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+
+    .item-date {
+      color: var(--muted);
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 9px;
+      border-radius: 999px;
+      font-size: 0.73rem;
+      font-weight: 800;
+    }
+
+    .badge-shop {
+      background: rgba(168,85,247,0.14);
+      color: #c4b5fd;
+      border: 1px solid rgba(168,85,247,0.18);
+    }
+
+    .badge-owned {
+      background: rgba(34,197,94,0.14);
+      color: #16a34a;
+      border: 1px solid rgba(34,197,94,0.18);
+    }
+
+    .shop-desc-box,
+    .inventory-desc-box {
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(168,85,247,0.08);
+      border: 1px solid rgba(168,85,247,0.16);
+      min-height: 66px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-size: 0.92rem;
+    }
+
+    .preview-box {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.03);
+      overflow: hidden;
+    }
+
+    .theme-preview,
+    .background-preview,
+    .card-skin-preview {
+      height: 64px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.10);
+      display: flex;
+      align-items: end;
+      padding: 8px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: #eef4ff;
+    }
+
+    .theme-preview.blue_neon { background: linear-gradient(135deg, #082f49, #0e7490); }
+    .theme-preview.purple_galaxy { background: linear-gradient(135deg, #2e1065, #581c87); }
+    .theme-preview.emerald_forest { background: linear-gradient(135deg, #064e3b, #14532d); }
+    .theme-preview.crimson_sunset { background: linear-gradient(135deg, #7f1d1d, #c2410c); }
+    .theme-preview.silver_minimal { background: linear-gradient(135deg, #334155, #64748b); }
+
+    .background-preview.space {
+      background:
+        radial-gradient(circle at 20% 20%, rgba(99,102,241,0.35), transparent 20%),
+        radial-gradient(circle at 80% 18%, rgba(168,85,247,0.30), transparent 20%),
+        linear-gradient(180deg, #060816, #111827);
+    }
+
+    .background-preview.sunset {
+      background:
+        radial-gradient(circle at 20% 20%, rgba(251,146,60,0.30), transparent 20%),
+        radial-gradient(circle at 80% 18%, rgba(244,114,182,0.22), transparent 18%),
+        linear-gradient(180deg, #1f2937, #ea580c);
+    }
+
+    .background-preview.aurora {
+      background:
+        radial-gradient(circle at 18% 20%, rgba(34,197,94,0.30), transparent 20%),
+        radial-gradient(circle at 78% 18%, rgba(59,130,246,0.30), transparent 18%),
+        linear-gradient(180deg, #03111f, #111827);
+    }
+
+    .background-preview.matrix {
+      background: linear-gradient(180deg, #020b05, #04150b, #0b1220);
+    }
+
+    .background-preview.midnight_city {
+      background:
+        radial-gradient(circle at 80% 15%, rgba(59,130,246,0.20), transparent 20%),
+        linear-gradient(180deg, #0b1020, #1f2937);
+    }
+
+    .badge-preview-wrap,
+    .name-color-preview-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 64px;
+    }
+
+    .badge-preview {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 800;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06);
+    }
+
+    .badge-preview.gold_dev {
+      background: rgba(245,158,11,0.18);
+      color: #fde68a;
+      border-color: rgba(245,158,11,0.28);
+    }
+
+    .badge-preview.master_coder {
+      background: rgba(168,85,247,0.18);
+      color: #e9d5ff;
+      border-color: rgba(168,85,247,0.28);
+    }
+
+    .badge-preview.bug_hunter {
+      background: rgba(34,197,94,0.18);
+      color: #bbf7d0;
+      border-color: rgba(34,197,94,0.28);
+    }
+
+    .badge-preview.exam_ace {
+      background: rgba(59,130,246,0.18);
+      color: #bfdbfe;
+      border-color: rgba(59,130,246,0.28);
+    }
+
+    .badge-preview.streak_master {
+      background: rgba(244,114,182,0.18);
+      color: #fbcfe8;
+      border-color: rgba(244,114,182,0.28);
+    }
+
+    .name-color-sample {
+      font-size: 1rem;
+      font-weight: 800;
+    }
+
+    .name-color-sample.sky { color: #7dd3fc; }
+    .name-color-sample.lime { color: #bef264; }
+    .name-color-sample.pink { color: #f9a8d4; }
+    .name-color-sample.gold { color: #fde68a; }
+
+    .card-skin-preview.glass_strong {
+      background: rgba(255,255,255,0.10);
+      border-color: rgba(255,255,255,0.18);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
+    }
+
+    .card-skin-preview.soft_light {
+      background: rgba(255,255,255,0.06);
+      border-color: rgba(255,255,255,0.14);
+    }
+
+    .card-skin-preview.outline_neon {
+      background: rgba(255,255,255,0.04);
+      border-color: rgba(34,211,238,0.30);
+      box-shadow: inset 0 0 0 1px rgba(59,130,246,0.10);
+    }
+
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    button {
+      border: none;
+      cursor: pointer;
+      border-radius: 11px;
+      padding: 10px 14px;
+      font-weight: 700;
+      color: white;
+      background: linear-gradient(135deg, var(--primary), var(--primary-2));
+      transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+      box-shadow: 0 10px 24px rgba(59,130,246,0.18);
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      opacity: 0.96;
+    }
+
+    .success-btn {
+      background: linear-gradient(135deg, #16a34a, #22c55e);
+      box-shadow: 0 10px 24px rgba(34,197,94,0.18);
+    }
+
+    .ghost-btn {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      box-shadow: none;
+      color: var(--text);
+    }
+
+    .empty-state {
+      color: var(--muted);
+      padding: 6px 2px;
+    }
+
+    @media (max-width: 1320px) {
+      .shop-grid-3 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 1100px) {
+      .hero-inner,
+      .page-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .hero-stats {
+        grid-template-columns: 1fr;
+      }
+
+      .shop-grid-3 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 560px) {
+      body {
+        padding: 14px 10px 36px;
+      }
+
+      .hero,
+      .card {
+        padding: 16px;
+      }
+
+      .hero h1 {
+        font-size: 1.9rem;
+      }
+
+      .shop-scroll,
+      .inventory-scroll {
+        max-height: 480px;
+        min-height: 480px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <section id="heroSection" class="hero glass">
+    <div class="hero-topbar">
+      <div id="userChip" class="user-chip">사용자 확인 중...</div>
+      <button class="theme-toggle" onclick="toggleTheme()">☀️ / 🌙 화면 밝기 전환</button>
+      <button class="theme-toggle" onclick="location.href='index.html'">대시보드</button>
+      <button class="theme-toggle" onclick="location.href='study.html'">학습</button>
+      <button class="theme-toggle" onclick="location.href='exam.html'">시험</button>
+      <button class="theme-toggle" onclick="logout()">로그아웃</button>
+    </div>
+
+    <div class="hero-inner">
+      <div>
+        <div style="display:flex; align-items:center; flex-wrap:wrap; gap:8px;">
+          <div class="hero-badge">🛒 Shop / Inventory</div>
+          <div id="activeBadgeView"></div>
+        </div>
+
+        <h1>
+          상점 / 인벤토리<br>
+          <span>꾸미기 전용 페이지</span>
+        </h1>
+        <p>
+          포인트로 아이템을 구매하고, 보유한 꾸미기 요소를 인벤토리에서 바로 적용할 수 있는
+          전용 관리 페이지입니다.
+        </p>
+
+        <div class="hero-stats">
+          <div class="mini-card">
+            <strong>Point Usage</strong>
+            <span>포인트로 아이템 구매</span>
+          </div>
+          <div class="mini-card">
+            <strong>Inventory</strong>
+            <span>보유 아이템 관리</span>
+          </div>
+          <div class="mini-card">
+            <strong>Customization</strong>
+            <span>테마 / 배지 / 배경 적용</span>
+          </div>
+        </div>
+      </div>
+
+      <aside class="hero-panel">
+        <h2>Page Focus</h2>
+        <p>
+          메인 페이지에서 분리한 상점/인벤토리 전용 페이지입니다.
+          목록이 길어져도 스크롤 영역 안에서 깔끔하게 관리할 수 있습니다.
+        </p>
+        <div class="pill-row">
+          <span>Theme</span>
+          <span>Badge</span>
+          <span>Background</span>
+          <span>Name Color</span>
+          <span>Card Skin</span>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section class="summary-grid">
+    <div class="summary-card glass">
+      <strong>내 포인트</strong>
+      <div id="pointBox" class="point-box">
+        <div class="point-strong">0P</div>
+        <div class="point-sub">불러오는 중...</div>
+      </div>
+    </div>
+
+    <div class="summary-card glass">
+      <strong>현재 적용 중</strong>
+      <div id="activeCustomBox" class="info-box">불러오는 중...</div>
+    </div>
+
+    <div class="summary-card glass">
+      <strong>안내</strong>
+      <div class="info-box">
+상점과 인벤토리는 고정 높이 + 내부 스크롤 구조로 정리되어 있습니다.
+      </div>
+    </div>
+  </section>
+
+  <section class="page-grid">
+    <div class="card glass">
+      <div class="section-head">
+        <h2>상점</h2>
+      </div>
+      <div class="section-sub">아이템 유형별로 나눠서 확인하고 구매하세요.</div>
+
+      <div class="tab-row" id="shopTabRow">
+        <button class="tab-btn active-tab" onclick="setShopFilter('all')">전체</button>
+        <button class="tab-btn" onclick="setShopFilter('theme')">테마</button>
+        <button class="tab-btn" onclick="setShopFilter('badge')">배지</button>
+        <button class="tab-btn" onclick="setShopFilter('background')">배경</button>
+        <button class="tab-btn" onclick="setShopFilter('name_color')">닉네임 컬러</button>
+        <button class="tab-btn" onclick="setShopFilter('card_skin')">카드 스킨</button>
+      </div>
+
+      <div class="shop-scroll">
+        <div id="shopItemList" class="shop-grid-3"></div>
+      </div>
+    </div>
+
+    <div class="card glass">
+      <div class="section-head">
+        <h2>내 인벤토리</h2>
+      </div>
+      <div class="section-sub">보유한 아이템을 유형별로 보고 바로 적용하세요.</div>
+
+      <div class="tab-row" id="inventoryTabRow">
+        <button class="tab-btn active-tab" onclick="setInventoryFilter('all')">전체</button>
+        <button class="tab-btn" onclick="setInventoryFilter('theme')">테마</button>
+        <button class="tab-btn" onclick="setInventoryFilter('badge')">배지</button>
+        <button class="tab-btn" onclick="setInventoryFilter('background')">배경</button>
+        <button class="tab-btn" onclick="setInventoryFilter('name_color')">닉네임 컬러</button>
+        <button class="tab-btn" onclick="setInventoryFilter('card_skin')">카드 스킨</button>
+      </div>
+
+      <div class="inventory-scroll">
+        <div id="inventoryList" class="shop-grid-3"></div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    const API_BASE = "http://127.0.0.1:8000";
+    let currentUser = null;
+    let profileCustomState = null;
+    let shopItemsCache = [];
+    let inventoryItemsCache = [];
+    let currentShopFilter = "all";
+    let currentInventoryFilter = "all";
+
+    function escapeHtml(text) {
+      return String(text ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;");
+    }
+
+    function getLoggedInUser() {
+      const raw = localStorage.getItem("loggedInUser");
+      if (!raw) return null;
+      try {
+        return JSON.parse(raw);
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function requireLogin() {
+      currentUser = getLoggedInUser();
+      if (!currentUser || !currentUser.id) {
+        localStorage.removeItem("loggedInUser");
+        location.href = "login.html";
+        return false;
+      }
+      return true;
+    }
+
+    function getUserId() {
+      return currentUser?.id;
+    }
+
+    function updateUserChip() {
+      const chip = document.getElementById("userChip");
+      if (!currentUser) {
+        chip.innerText = "로그인 정보 없음";
+        return;
+      }
+      chip.innerText = `👤 ${currentUser.username} (${currentUser.email})`;
+    }
+
+    function logout() {
+      localStorage.removeItem("loggedInUser");
+      location.href = "login.html";
+    }
+
+    function applyTheme(theme) {
+      document.documentElement.setAttribute("data-theme", theme);
+      localStorage.setItem("theme", theme);
+    }
+
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute("data-theme") || "dark";
+      applyTheme(current === "dark" ? "light" : "dark");
+    }
+
+    function initTheme() {
+      const saved = localStorage.getItem("theme") || "dark";
+      applyTheme(saved);
+    }
+
+    function clearCustomVisuals() {
+      document.body.classList.remove(
+        "custom-background-space",
+        "custom-background-sunset",
+        "custom-background-aurora",
+        "custom-background-matrix",
+        "custom-background-midnight_city",
+        "card-skin-glass-strong",
+        "card-skin-soft-light",
+        "card-skin-outline-neon"
+      );
+
+      document.getElementById("heroSection").classList.remove(
+        "custom-theme-blue_neon",
+        "custom-theme-purple_galaxy",
+        "custom-theme-emerald_forest",
+        "custom-theme-crimson_sunset",
+        "custom-theme-silver_minimal"
+      );
+
+      document.getElementById("activeBadgeView").innerHTML = "";
+      document.documentElement.style.setProperty("--name-accent", "inherit");
+    }
+
+    function renderBadge(badgeStyle) {
+      const badgeView = document.getElementById("activeBadgeView");
+
+      if (badgeStyle === "gold_dev") {
+        badgeView.innerHTML = `<span class="profile-badge gold_dev">🏆 골드 개발자</span>`;
+      } else if (badgeStyle === "master_coder") {
+        badgeView.innerHTML = `<span class="profile-badge master_coder">👑 마스터 코더</span>`;
+      } else if (badgeStyle === "bug_hunter") {
+        badgeView.innerHTML = `<span class="profile-badge bug_hunter">🛠 버그 헌터</span>`;
+      } else if (badgeStyle === "exam_ace") {
+        badgeView.innerHTML = `<span class="profile-badge exam_ace">📘 시험 에이스</span>`;
+      } else if (badgeStyle === "streak_master") {
+        badgeView.innerHTML = `<span class="profile-badge streak_master">🔥 스트릭 마스터</span>`;
+      } else {
+        badgeView.innerHTML = "";
+      }
+    }
+
+    function applyProfileCustomToUI(custom) {
+      clearCustomVisuals();
+      profileCustomState = custom;
+
+      if (!custom) return;
+
+      if (custom.background_style === "space") {
+        document.body.classList.add("custom-background-space");
+      } else if (custom.background_style === "sunset") {
+        document.body.classList.add("custom-background-sunset");
+      } else if (custom.background_style === "aurora") {
+        document.body.classList.add("custom-background-aurora");
+      } else if (custom.background_style === "matrix") {
+        document.body.classList.add("custom-background-matrix");
+      } else if (custom.background_style === "midnight_city") {
+        document.body.classList.add("custom-background-midnight_city");
+      }
+
+      if (custom.theme_style === "blue_neon") {
+        document.getElementById("heroSection").classList.add("custom-theme-blue_neon");
+      } else if (custom.theme_style === "purple_galaxy") {
+        document.getElementById("heroSection").classList.add("custom-theme-purple_galaxy");
+      } else if (custom.theme_style === "emerald_forest") {
+        document.getElementById("heroSection").classList.add("custom-theme-emerald_forest");
+      } else if (custom.theme_style === "crimson_sunset") {
+        document.getElementById("heroSection").classList.add("custom-theme-crimson_sunset");
+      } else if (custom.theme_style === "silver_minimal") {
+        document.getElementById("heroSection").classList.add("custom-theme-silver_minimal");
+      }
+
+      renderBadge(custom.badge_style);
+
+      if (custom.name_color_style === "sky") {
+        document.documentElement.style.setProperty("--name-accent", "#7dd3fc");
+      } else if (custom.name_color_style === "lime") {
+        document.documentElement.style.setProperty("--name-accent", "#bef264");
+      } else if (custom.name_color_style === "pink") {
+        document.documentElement.style.setProperty("--name-accent", "#f9a8d4");
+      } else if (custom.name_color_style === "gold") {
+        document.documentElement.style.setProperty("--name-accent", "#fde68a");
+      }
+
+      if (custom.card_skin_style === "glass_strong") {
+        document.body.classList.add("card-skin-glass-strong");
+      } else if (custom.card_skin_style === "soft_light") {
+        document.body.classList.add("card-skin-soft-light");
+      } else if (custom.card_skin_style === "outline_neon") {
+        document.body.classList.add("card-skin-outline-neon");
+      }
+    }
+
+    async function loadProfileCustom() {
+      try {
+        const res = await fetch(`${API_BASE}/profile/custom?user_id=${getUserId()}`);
+        const data = await res.json();
+        const custom = data.custom || null;
+
+        applyProfileCustomToUI(custom);
+
+        document.getElementById("activeCustomBox").innerHTML = `
+현재 테마: ${custom?.theme_name || "기본"}
+현재 배지: ${custom?.badge_name || "없음"}
+현재 배경: ${custom?.background_name || "기본"}
+현재 닉네임 컬러: ${custom?.name_color_name || "기본"}
+현재 카드 스킨: ${custom?.card_skin_name || "기본"}
+        `;
+      } catch (e) {
+        document.getElementById("activeCustomBox").innerText = "적용 중인 꾸미기 정보를 불러오지 못했습니다.";
+      }
+    }
+
+    async function loadPoints() {
+      try {
+        const res = await fetch(`${API_BASE}/points?user_id=${getUserId()}`);
+        const data = await res.json();
+
+        document.getElementById("pointBox").innerHTML = `
+          <div class="point-strong">${data.total_points ?? 0}P</div>
+          <div class="point-sub">현재 보유 포인트</div>
+        `;
+      } catch (e) {
+        document.getElementById("pointBox").innerHTML = `
+          <div class="point-strong">-</div>
+          <div class="point-sub">포인트 로드 실패</div>
+        `;
+      }
+    }
+
+    function updateTabButtons(rowId, activeValue) {
+      const row = document.getElementById(rowId);
+      if (!row) return;
+
+      row.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active-tab"));
+
+      const target = Array.from(row.querySelectorAll(".tab-btn")).find(btn =>
+        btn.getAttribute("onclick")?.includes(`'${activeValue}'`)
+      );
+
+      if (target) target.classList.add("active-tab");
+    }
+
+    function setShopFilter(type) {
+      currentShopFilter = type;
+      updateTabButtons("shopTabRow", type);
+      renderShopItems();
+    }
+
+    function setInventoryFilter(type) {
+      currentInventoryFilter = type;
+      updateTabButtons("inventoryTabRow", type);
+      renderInventoryItems();
+    }
+
+    function filterByType(items, type) {
+      if (type === "all") return items;
+      return items.filter(item => item.item_type === type);
+    }
+
+    function getPreviewHtml(item) {
+      const styleValue = escapeHtml(item.style_value || "");
+
+      if (item.item_type === "theme") {
+        return `
+          <div class="preview-box">
+            <div class="theme-preview ${styleValue}">${escapeHtml(item.item_name)} 미리보기</div>
+          </div>
+        `;
+      }
+
+      if (item.item_type === "badge") {
+        const labelMap = {
+          gold_dev: "🏆 골드 개발자",
+          master_coder: "👑 마스터 코더",
+          bug_hunter: "🛠 버그 헌터",
+          exam_ace: "📘 시험 에이스",
+          streak_master: "🔥 스트릭 마스터"
+        };
+        return `
+          <div class="preview-box">
+            <div class="badge-preview-wrap">
+              <span class="badge-preview ${styleValue}">${labelMap[item.style_value] || escapeHtml(item.item_name)}</span>
+            </div>
+          </div>
+        `;
+      }
+
+      if (item.item_type === "background") {
+        return `
+          <div class="preview-box">
+            <div class="background-preview ${styleValue}">${escapeHtml(item.item_name)} 배경</div>
+          </div>
+        `;
+      }
+
+      if (item.item_type === "name_color") {
+        return `
+          <div class="preview-box">
+            <div class="name-color-preview-wrap">
+              <div class="name-color-sample ${styleValue}">전다훈 / AI Developer</div>
+            </div>
+          </div>
+        `;
+      }
+
+      if (item.item_type === "card_skin") {
+        return `
+          <div class="preview-box">
+            <div class="card-skin-preview ${styleValue}">카드 스킨 미리보기</div>
+          </div>
+        `;
+      }
+
+      return "";
+    }
+
+    async function loadShopItems() {
+      try {
+        const res = await fetch(`${API_BASE}/shop/items?user_id=${getUserId()}`);
+        const data = await res.json();
+        shopItemsCache = data.items || [];
+        renderShopItems();
+      } catch (e) {
+        document.getElementById("shopItemList").innerHTML = `<div class="empty-state">상점 목록을 불러오지 못했습니다.</div>`;
+      }
+    }
+
+    function renderShopItems() {
+      const list = document.getElementById("shopItemList");
+      const items = filterByType(shopItemsCache, currentShopFilter);
+
+      if (items.length === 0) {
+        list.innerHTML = `<div class="empty-state">해당 유형의 아이템이 없습니다.</div>`;
+        return;
+      }
+
+      list.innerHTML = items.map(item => `
+        <div class="shop-item">
+          <div class="item-top">
+            <div>
+              <strong>${escapeHtml(item.item_name)}</strong>
+              <div class="item-date">${escapeHtml(item.item_type)} / ${item.price}P</div>
+            </div>
+            <div class="badge badge-shop">${item.is_owned ? "보유 중" : "판매 중"}</div>
+          </div>
+
+          <div class="shop-desc-box">${escapeHtml(item.description || "설명 없음")}</div>
+          ${getPreviewHtml(item)}
+
+          <div class="btn-row">
+            ${
+              item.is_owned
+                ? `<button class="ghost-btn" disabled>보유 완료</button>`
+                : `<button onclick="purchaseItem(${item.id})">구매</button>`
+            }
+          </div>
+        </div>
+      `).join("");
+    }
+
+    async function purchaseItem(itemId) {
+      try {
+        const res = await fetch(`${API_BASE}/shop/purchase`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            user_id: getUserId(),
+            item_id: itemId
+          })
+        });
+
+        const data = await res.json();
+        alert(data.message || "처리 완료");
+
+        await loadPoints();
+        await loadShopItems();
+        await loadInventory();
+      } catch (e) {
+        alert("아이템 구매 중 오류가 발생했습니다.");
+      }
+    }
+
+    async function loadInventory() {
+      try {
+        const res = await fetch(`${API_BASE}/shop/inventory?user_id=${getUserId()}`);
+        const data = await res.json();
+        inventoryItemsCache = data.items || [];
+        renderInventoryItems();
+      } catch (e) {
+        document.getElementById("inventoryList").innerHTML = `<div class="empty-state">인벤토리를 불러오지 못했습니다.</div>`;
+      }
+    }
+
+    function renderInventoryItems() {
+      const list = document.getElementById("inventoryList");
+      const items = filterByType(inventoryItemsCache, currentInventoryFilter);
+
+      if (items.length === 0) {
+        list.innerHTML = `<div class="empty-state">보유한 아이템이 없습니다.</div>`;
+        return;
+      }
+
+      list.innerHTML = items.map(item => `
+        <div class="inventory-item">
+          <div class="item-top">
+            <div>
+              <strong>${escapeHtml(item.item_name)}</strong>
+              <div class="item-date">${escapeHtml(item.item_type)}</div>
+            </div>
+            <div class="badge badge-owned">보유</div>
+          </div>
+
+          <div class="inventory-desc-box">${escapeHtml(item.description || "설명 없음")}</div>
+          ${getPreviewHtml(item)}
+
+          <div class="btn-row">
+            <button class="success-btn" onclick="applyItem(${item.item_id})">적용</button>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    async function applyItem(itemId) {
+      try {
+        const res = await fetch(`${API_BASE}/shop/apply`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            user_id: getUserId(),
+            item_id: itemId
+          })
+        });
+
+        const data = await res.json();
+        alert(data.message || "적용 완료");
+
+        await loadProfileCustom();
+        await loadInventory();
+      } catch (e) {
+        alert("아이템 적용 중 오류가 발생했습니다.");
+      }
+    }
+
+    async function initPage() {
+      initTheme();
+
+      if (!requireLogin()) return;
+
+      updateUserChip();
+
+      await loadProfileCustom();
+      await loadPoints();
+      await loadShopItems();
+      await loadInventory();
+    }
+
+    initPage();
+  </script>
+</body>
+</html>
