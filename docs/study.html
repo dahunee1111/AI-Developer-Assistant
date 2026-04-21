@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>학습 / 분석 | AI Developer Assistant</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --panel: rgba(17, 24, 39, 0.82);
+      --line: rgba(255, 255, 255, 0.08);
+      --text: #eef4ff;
+      --muted: #a7b4c8;
+      --primary: #3b82f6;
+      --primary-2: #22d3ee;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --success: #22c55e;
+      --shadow: 0 18px 45px rgba(0, 0, 0, 0.28);
+      --radius: 22px;
+      --card-bg: rgba(255,255,255,0.04);
+      --card-border: rgba(255,255,255,0.08);
+      --hero-grad-1: rgba(15,23,42,0.96);
+      --hero-grad-2: rgba(30,41,59,0.88);
+      --result-blue: rgba(59,130,246,0.08);
+      --result-orange: rgba(249,115,22,0.08);
+      --result-cyan: rgba(34,211,238,0.07);
+      --result-green: rgba(34,197,94,0.08);
+      --name-accent: inherit;
+    }
+
+    html[data-theme="light"] {
+      --bg: #eef4ff;
+      --panel: rgba(255, 255, 255, 0.92);
+      --line: rgba(15, 23, 42, 0.08);
+      --text: #0f172a;
+      --muted: #475569;
+      --primary: #2563eb;
+      --primary-2: #06b6d4;
+      --warning: #d97706;
+      --danger: #dc2626;
+      --success: #16a34a;
+      --shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+      --card-bg: rgba(15,23,42,0.03);
+      --card-border: rgba(15,23,42,0.08);
+      --hero-grad-1: rgba(255,255,255,0.98);
+      --hero-grad-2: rgba(241,245,249,0.92);
+      --result-blue: rgba(37,99,235,0.08);
+      --result-orange: rgba(217,119,6,0.08);
+      --result-cyan: rgba(6,182,212,0.08);
+      --result-green: rgba(22,163,74,0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Segoe UI", Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(59,130,246,0.10), transparent 24%),
+        radial-gradient(circle at top right, rgba(34,211,238,0.10), transparent 22%),
+        linear-gradient(180deg, var(--bg) 0%, var(--bg) 100%);
+      max-width: 1460px;
+      margin: 0 auto;
+      padding: 24px 18px 48px;
+      line-height: 1.6;
+      transition: background 0.25s ease, color 0.25s ease;
+    }
+
+    body.custom-background-space {
+      background:
+        radial-gradient(circle at 20% 20%, rgba(99,102,241,0.22), transparent 18%),
+        radial-gradient(circle at 80% 18%, rgba(168,85,247,0.18), transparent 18%),
+        radial-gradient(circle at 50% 80%, rgba(34,211,238,0.14), transparent 20%),
+        linear-gradient(180deg, #060816 0%, #0b1020 55%, #111827 100%);
+    }
+
+    body.custom-background-sunset {
+      background:
+        radial-gradient(circle at 20% 20%, rgba(251,146,60,0.22), transparent 20%),
+        radial-gradient(circle at 80% 18%, rgba(244,114,182,0.16), transparent 18%),
+        linear-gradient(180deg, #1f2937 0%, #7c2d12 45%, #ea580c 100%);
+    }
+
+    body.custom-background-aurora {
+      background:
+        radial-gradient(circle at 18% 20%, rgba(34,197,94,0.18), transparent 20%),
+        radial-gradient(circle at 78% 18%, rgba(59,130,246,0.18), transparent 18%),
+        radial-gradient(circle at 50% 70%, rgba(168,85,247,0.16), transparent 22%),
+        linear-gradient(180deg, #03111f 0%, #0b1b2b 45%, #111827 100%);
+    }
+
+    body.custom-background-matrix {
+      background:
+        radial-gradient(circle at 20% 15%, rgba(34,197,94,0.14), transparent 18%),
+        linear-gradient(180deg, #020b05 0%, #04150b 50%, #0b1220 100%);
+    }
+
+    body.custom-background-midnight_city {
+      background:
+        radial-gradient(circle at 80% 15%, rgba(59,130,246,0.12), transparent 20%),
+        radial-gradient(circle at 20% 20%, rgba(168,85,247,0.10), transparent 18%),
+        linear-gradient(180deg, #0b1020 0%, #111827 45%, #1f2937 100%);
+    }
+
+    .glass {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      backdrop-filter: blur(16px);
+      box-shadow: var(--shadow);
+      border-radius: var(--radius);
+      transition: background 0.25s ease, border-color 0.25s ease;
+    }
+
+    .card-skin-glass-strong .glass,
+    .card-skin-glass-strong .history-item,
+    .card-skin-glass-strong .journal-item,
+    .card-skin-glass-strong .code-item,
+    .card-skin-glass-strong .mini-card {
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.12);
+    }
+
+    .card-skin-soft-light .glass,
+    .card-skin-soft-light .history-item,
+    .card-skin-soft-light .journal-item,
+    .card-skin-soft-light .code-item,
+    .card-skin-soft-light .mini-card {
+      background: rgba(255,255,255,0.06);
+      border-color: rgba(255,255,255,0.10);
+    }
+
+    .card-skin-outline-neon .glass,
+    .card-skin-outline-neon .history-item,
+    .card-skin-outline-neon .journal-item,
+    .card-skin-outline-neon .code-item,
+    .card-skin-outline-neon .mini-card {
+      border-color: rgba(34,211,238,0.28);
+      box-shadow:
+        0 18px 45px rgba(0, 0, 0, 0.28),
+        0 0 0 1px rgba(59,130,246,0.10) inset;
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: 28px;
+      margin-bottom: 18px;
+      background: linear-gradient(135deg, var(--hero-grad-1), var(--hero-grad-2)), var(--panel);
+    }
+
+    .hero.custom-theme-blue_neon { background: linear-gradient(135deg, rgba(8,47,73,0.98), rgba(14,116,144,0.88)), var(--panel); }
+    .hero.custom-theme-purple_galaxy { background: linear-gradient(135deg, rgba(46,16,101,0.98), rgba(88,28,135,0.88)), var(--panel); }
+    .hero.custom-theme-emerald_forest { background: linear-gradient(135deg, rgba(6,78,59,0.98), rgba(20,83,45,0.90)), var(--panel); }
+    .hero.custom-theme-crimson_sunset { background: linear-gradient(135deg, rgba(127,29,29,0.98), rgba(194,65,12,0.90)), var(--panel); }
+    .hero.custom-theme-silver_minimal { background: linear-gradient(135deg, rgba(51,65,85,0.96), rgba(100,116,139,0.84)), var(--panel); }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 18% 20%, rgba(96,165,250,0.14), transparent 20%),
+        radial-gradient(circle at 82% 24%, rgba(34,211,238,0.10), transparent 18%);
+      pointer-events: none;
+    }
+
+    .hero-topbar {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .theme-toggle {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid var(--line);
+      box-shadow: none;
+      color: var(--text);
+    }
+
+    .user-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 13px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.06);
+      color: var(--name-accent);
+      font-size: 0.88rem;
+      font-weight: 700;
+    }
+
+    .hero-inner {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+      font-size: 0.88rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .profile-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 13px;
+      border-radius: 999px;
+      margin-left: 8px;
+      font-size: 0.84rem;
+      font-weight: 800;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06);
+    }
+
+    .profile-badge.gold_dev { background: rgba(245,158,11,0.18); color: #fde68a; border-color: rgba(245,158,11,0.28); }
+    .profile-badge.master_coder { background: rgba(168,85,247,0.18); color: #e9d5ff; border-color: rgba(168,85,247,0.28); }
+    .profile-badge.bug_hunter { background: rgba(34,197,94,0.18); color: #bbf7d0; border-color: rgba(34,197,94,0.28); }
+    .profile-badge.exam_ace { background: rgba(59,130,246,0.18); color: #bfdbfe; border-color: rgba(59,130,246,0.28); }
+    .profile-badge.streak_master { background: rgba(244,114,182,0.18); color: #fbcfe8; border-color: rgba(244,114,182,0.28); }
+
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3.3rem);
+      line-height: 1.08;
+      letter-spacing: -0.04em;
+      margin-bottom: 10px;
+      color: var(--name-accent);
+    }
+
+    .hero h1 span {
+      background: linear-gradient(135deg, #7dd3fc, #93c5fd, #67e8f9);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero p {
+      color: var(--muted);
+      max-width: 760px;
+      margin-bottom: 16px;
+      font-size: 0.98rem;
+    }
+
+    .hero-stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .mini-card, .hero-panel {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+    }
+
+    .mini-card { padding: 16px; }
+    .hero-panel { padding: 18px; }
+
+    .mini-card strong {
+      display: block;
+      font-size: 1rem;
+      margin-bottom: 4px;
+      color: var(--name-accent);
+    }
+
+    .mini-card span {
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .hero-panel h2 {
+      font-size: 1.08rem;
+      margin-bottom: 8px;
+      color: var(--name-accent);
+    }
+
+    .hero-panel p {
+      margin-bottom: 10px;
+      color: var(--muted);
+      font-size: 0.93rem;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+
+    .pill-row span {
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      font-size: 0.8rem;
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .page-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .card {
+      padding: 18px;
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .section-head h2 {
+      font-size: 1.08rem;
+      letter-spacing: -0.02em;
+      color: var(--name-accent);
+    }
+
+    .section-sub {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-bottom: 10px;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 150px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: var(--card-bg);
+      color: var(--text);
+      padding: 12px 14px;
+      resize: vertical;
+      outline: none;
+      font-size: 14px;
+    }
+
+    textarea::placeholder {
+      color: var(--muted);
+    }
+
+    textarea:focus {
+      border-color: rgba(96,165,250,0.6);
+      box-shadow: 0 0 0 4px rgba(59,130,246,0.12);
+    }
+
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    button {
+      border: none;
+      cursor: pointer;
+      border-radius: 11px;
+      padding: 10px 14px;
+      font-weight: 700;
+      color: white;
+      background: linear-gradient(135deg, var(--primary), var(--primary-2));
+      transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+      box-shadow: 0 10px 24px rgba(59,130,246,0.18);
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      opacity: 0.96;
+    }
+
+    .edit-btn {
+      background: linear-gradient(135deg, #f59e0b, #f97316);
+      box-shadow: 0 10px 24px rgba(245,158,11,0.18);
+    }
+
+    .delete-btn {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      box-shadow: 0 10px 24px rgba(239,68,68,0.16);
+    }
+
+    .ghost-btn {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      box-shadow: none;
+      color: var(--text);
+    }
+
+    .result-box {
+      min-height: 180px;
+      padding: 14px;
+      border-radius: 14px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .chart-wrap {
+      position: relative;
+      height: 260px;
+      margin-top: 6px;
+    }
+
+    .log-list {
+      display: grid;
+      gap: 10px;
+      max-height: 360px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .history-item,
+    .journal-item,
+    .code-item {
+      padding: 14px;
+      border-radius: 16px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+    }
+
+    .item-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+
+    .item-date {
+      color: var(--muted);
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 9px;
+      border-radius: 999px;
+      font-size: 0.73rem;
+      font-weight: 800;
+    }
+
+    .badge-error {
+      background: rgba(239,68,68,0.14);
+      color: #ef4444;
+      border: 1px solid rgba(239,68,68,0.18);
+    }
+
+    .badge-journal {
+      background: rgba(59,130,246,0.14);
+      color: #2563eb;
+      border: 1px solid rgba(59,130,246,0.18);
+    }
+
+    .badge-code {
+      background: rgba(34,211,238,0.14);
+      color: #0891b2;
+      border: 1px solid rgba(34,211,238,0.18);
+    }
+
+    .history-error-box,
+    .history-result-box,
+    .journal-content-box,
+    .code-input-box,
+    .code-result-box {
+      padding: 10px 12px;
+      border-radius: 12px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-size: 0.92rem;
+    }
+
+    .history-error-box {
+      background: var(--result-orange);
+      border: 1px solid rgba(249,115,22,0.16);
+      margin-bottom: 8px;
+    }
+
+    .history-result-box {
+      background: var(--result-blue);
+      border: 1px solid rgba(59,130,246,0.16);
+    }
+
+    .journal-content-box {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+    }
+
+    .code-input-box {
+      background: var(--result-cyan);
+      border: 1px solid rgba(34,211,238,0.16);
+      margin-bottom: 8px;
+      font-family: Consolas, monospace;
+      font-size: 12px;
+    }
+
+    .code-result-box {
+      background: var(--result-blue);
+      border: 1px solid rgba(59,130,246,0.16);
+    }
+
+    .empty-state {
+      color: var(--muted);
+      padding: 6px 2px;
+    }
+
+    @media (max-width: 1100px) {
+      .hero-inner,
+      .page-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .hero-stats {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 560px) {
+      body {
+        padding: 14px 10px 36px;
+      }
+
+      .hero,
+      .card {
+        padding: 16px;
+      }
+
+      .hero h1 {
+        font-size: 1.9rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <section id="heroSection" class="hero glass">
+    <div class="hero-topbar">
+      <div id="userChip" class="user-chip">사용자 확인 중...</div>
+      <button class="theme-toggle" onclick="toggleTheme()">☀️ / 🌙 화면 밝기 전환</button>
+      <button class="theme-toggle" onclick="location.href='index.html'">대시보드</button>
+      <button class="theme-toggle" onclick="location.href='shop.html'">상점</button>
+      <button class="theme-toggle" onclick="location.href='exam.html'">시험</button>
+      <button class="theme-toggle" onclick="logout()">로그아웃</button>
+    </div>
+
+    <div class="hero-inner">
+      <div>
+        <div style="display:flex; align-items:center; flex-wrap:wrap; gap:8px;">
+          <div class="hero-badge">📘 Study Workspace</div>
+          <div id="activeBadgeView"></div>
+        </div>
+
+        <h1>
+          학습 / 분석<br>
+          <span>실행 중심 작업 페이지</span>
+        </h1>
+        <p>
+          에러 분석, 코드 분석, 분석 결과, 성장 그래프, 분석 기록, 기록일기를
+          한 화면에서 정리해서 사용할 수 있는 실전 작업 공간입니다.
+        </p>
+
+        <div class="hero-stats">
+          <div class="mini-card">
+            <strong>Error Analysis</strong>
+            <span>에러 원인과 해결 방향 분석</span>
+          </div>
+          <div class="mini-card">
+            <strong>Code Review</strong>
+            <span>코드 개선 포인트 확인</span>
+          </div>
+          <div class="mini-card">
+            <strong>Journal</strong>
+            <span>오늘 배운 점과 기록 관리</span>
+          </div>
+        </div>
+      </div>
+
+      <aside class="hero-panel">
+        <h2>Page Focus</h2>
+        <p>
+          메인 대시보드에서 분리한 실행형 기능 전용 페이지입니다.
+          입력, 결과, 기록을 한 흐름으로 정리했습니다.
+        </p>
+        <div class="pill-row">
+          <span>Error</span>
+          <span>Code</span>
+          <span>History</span>
+          <span>Journal</span>
+          <span>Chart</span>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section class="page-grid">
+    <div class="card glass">
+      <div class="section-head">
+        <h2>에러 분석</h2>
+      </div>
+      <div class="section-sub">에러 메시지를 입력하면 AI가 원인과 해결 방향을 분석합니다.</div>
+      <textarea id="errorInput" placeholder="예: ModuleNotFoundError: No module named 'pandas'"></textarea>
+      <div class="btn-row">
+        <button onclick="analyze()">분석하기</button>
+        <button class="ghost-btn" onclick="loadHistory()">분석기록 새로고침</button>
+      </div>
+    </div>
+
+    <div class="card glass">
+      <div class="section-head">
+        <h2>코드 분석</h2>
+      </div>
+      <div class="section-sub">코드를 입력하면 AI가 문법, 구조, 개선 포인트를 분석합니다.</div>
+      <textarea id="codeInput" placeholder="Python 코드를 입력하세요"></textarea>
+      <div class="btn-row">
+        <button onclick="reviewCode()">코드 분석하기</button>
+        <button class="ghost-btn" onclick="loadCodeReviewHistory()">코드 분석기록 새로고침</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="card glass" style="margin-top:16px;">
+    <div class="section-head">
+      <h2>분석 결과</h2>
+    </div>
+    <div id="result" class="result-box">아직 없음</div>
+  </section>
+
+  <section class="page-grid" style="margin-top:16px;">
+    <div class="card glass">
+      <div class="section-head">
+        <h2>분석 기록</h2>
+      </div>
+      <div class="section-sub">이전에 분석한 에러와 AI 결과를 기록으로 확인할 수 있습니다.</div>
+      <div id="historyList" class="log-list"></div>
+    </div>
+
+    <div class="card glass">
+      <div class="section-head">
+        <h2>코드 분석 기록</h2>
+      </div>
+      <div class="section-sub">입력한 코드와 AI 리뷰 결과를 기록으로 확인할 수 있습니다.</div>
+      <div id="codeReviewList" class="log-list"></div>
+    </div>
+  </section>
+
+  <section class="page-grid" style="margin-top:16px;">
+    <div class="card glass">
+      <div class="section-head">
+        <h2>오늘 배운 점</h2>
+      </div>
+      <div class="section-sub">오늘 배운 내용이나 느낀 점을 기록해 학습 로그로 남깁니다.</div>
+      <textarea id="journalInput" placeholder="예: today I learned list comprehension과 dict.get()의 차이를 정리했다."></textarea>
+      <div class="btn-row">
+        <button onclick="saveJournal()">기록 저장</button>
+        <button class="ghost-btn" onclick="loadJournal()">기록 새로고침</button>
+      </div>
+    </div>
+
+    <div class="card glass">
+      <div class="section-head">
+        <h2>성장 그래프</h2>
+      </div>
+      <div class="section-sub">최근 시험 점수 흐름을 기반으로 성장 추이를 확인합니다.</div>
+      <div class="chart-wrap">
+        <canvas id="growthChart"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <section class="card glass" style="margin-top:16px;">
+    <div class="section-head">
+      <h2>기록일기 목록</h2>
+    </div>
+    <div class="section-sub">저장한 기록을 수정하거나 삭제할 수 있습니다.</div>
+    <div id="journalList" class="log-list"></div>
+  </section>
+
+  <script src="js/config.js"></script>
+  <script src="js/common.js"></script>
+  <script>
+    const API_BASE = AppCommon.getApiBase();
+    const escapeHtml = AppCommon.escapeHtml;
+
+    let chartInstance = null;
+    let currentUser = null;
+    let profileCustomState = null;
+
+    function getUserId() {
+      return currentUser?.id ?? null;
+    }
+
+    function logout() {
+      AppCommon.logout();
+    }
+
+    function toggleTheme() {
+      AppCommon.toggleTheme(() => {
+        if (chartInstance) loadChart();
+      });
+    }
+
+    function initPageBase() {
+      AppCommon.initTheme();
+
+      currentUser = AppCommon.requireLogin();
+      if (!currentUser) return false;
+
+      AppCommon.updateUserChip(currentUser);
+      return true;
+    }
+
+    function clearCustomVisuals() {
+      document.body.classList.remove(
+        "custom-background-space",
+        "custom-background-sunset",
+        "custom-background-aurora",
+        "custom-background-matrix",
+        "custom-background-midnight_city",
+        "card-skin-glass-strong",
+        "card-skin-soft-light",
+        "card-skin-outline-neon"
+      );
+
+      document.getElementById("heroSection").classList.remove(
+        "custom-theme-blue_neon",
+        "custom-theme-purple_galaxy",
+        "custom-theme-emerald_forest",
+        "custom-theme-crimson_sunset",
+        "custom-theme-silver_minimal"
+      );
+
+      document.getElementById("activeBadgeView").innerHTML = "";
+      document.documentElement.style.setProperty("--name-accent", "inherit");
+    }
+
+    function renderBadge(badgeStyle) {
+      const badgeView = document.getElementById("activeBadgeView");
+
+      if (badgeStyle === "gold_dev") {
+        badgeView.innerHTML = `<span class="profile-badge gold_dev">🏆 골드 개발자</span>`;
+      } else if (badgeStyle === "master_coder") {
+        badgeView.innerHTML = `<span class="profile-badge master_coder">👑 마스터 코더</span>`;
+      } else if (badgeStyle === "bug_hunter") {
+        badgeView.innerHTML = `<span class="profile-badge bug_hunter">🛠 버그 헌터</span>`;
+      } else if (badgeStyle === "exam_ace") {
+        badgeView.innerHTML = `<span class="profile-badge exam_ace">📘 시험 에이스</span>`;
+      } else if (badgeStyle === "streak_master") {
+        badgeView.innerHTML = `<span class="profile-badge streak_master">🔥 스트릭 마스터</span>`;
+      } else {
+        badgeView.innerHTML = "";
+      }
+    }
+
+    function applyProfileCustomToUI(custom) {
+      clearCustomVisuals();
+      profileCustomState = custom;
+
+      if (!custom) return;
+
+      if (custom.background_style === "space") {
+        document.body.classList.add("custom-background-space");
+      } else if (custom.background_style === "sunset") {
+        document.body.classList.add("custom-background-sunset");
+      } else if (custom.background_style === "aurora") {
+        document.body.classList.add("custom-background-aurora");
+      } else if (custom.background_style === "matrix") {
+        document.body.classList.add("custom-background-matrix");
+      } else if (custom.background_style === "midnight_city") {
+        document.body.classList.add("custom-background-midnight_city");
+      }
+
+      if (custom.theme_style === "blue_neon") {
+        document.getElementById("heroSection").classList.add("custom-theme-blue_neon");
+      } else if (custom.theme_style === "purple_galaxy") {
+        document.getElementById("heroSection").classList.add("custom-theme-purple_galaxy");
+      } else if (custom.theme_style === "emerald_forest") {
+        document.getElementById("heroSection").classList.add("custom-theme-emerald_forest");
+      } else if (custom.theme_style === "crimson_sunset") {
+        document.getElementById("heroSection").classList.add("custom-theme-crimson_sunset");
+      } else if (custom.theme_style === "silver_minimal") {
+        document.getElementById("heroSection").classList.add("custom-theme-silver_minimal");
+      }
+
+      renderBadge(custom.badge_style);
+
+      if (custom.name_color_style === "sky") {
+        document.documentElement.style.setProperty("--name-accent", "#7dd3fc");
+      } else if (custom.name_color_style === "lime") {
+        document.documentElement.style.setProperty("--name-accent", "#bef264");
+      } else if (custom.name_color_style === "pink") {
+        document.documentElement.style.setProperty("--name-accent", "#f9a8d4");
+      } else if (custom.name_color_style === "gold") {
+        document.documentElement.style.setProperty("--name-accent", "#fde68a");
+      }
+
+      if (custom.card_skin_style === "glass_strong") {
+        document.body.classList.add("card-skin-glass-strong");
+      } else if (custom.card_skin_style === "soft_light") {
+        document.body.classList.add("card-skin-soft-light");
+      } else if (custom.card_skin_style === "outline_neon") {
+        document.body.classList.add("card-skin-outline-neon");
+      }
+    }
+
+    async function loadProfileCustom() {
+      try {
+        const res = await fetch(`${API_BASE}/profile/custom?user_id=${getUserId()}`);
+        const data = await res.json();
+        const custom = data.custom || null;
+        applyProfileCustomToUI(custom);
+      } catch (e) {}
+    }
+
+    async function analyze() {
+      const error = document.getElementById("errorInput").value.trim();
+
+      if (!error) {
+        document.getElementById("result").innerText = "에러를 입력하세요.";
+        return;
+      }
+
+      document.getElementById("result").innerText = "분석 중...";
+
+      try {
+        const res = await fetch(`${API_BASE}/analyze`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ user_id: getUserId(), error })
+        });
+
+        const data = await res.json();
+        document.getElementById("result").innerText = data.result || "결과 없음";
+        await loadHistory();
+      } catch (e) {
+        document.getElementById("result").innerText = "분석 중 오류가 발생했습니다.";
+      }
+    }
+
+    async function reviewCode() {
+      const code = document.getElementById("codeInput").value.trim();
+
+      if (!code) {
+        document.getElementById("result").innerText = "코드를 입력하세요.";
+        return;
+      }
+
+      document.getElementById("result").innerText = "분석 중...";
+
+      try {
+        const res = await fetch(`${API_BASE}/code-review`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ user_id: getUserId(), code })
+        });
+
+        const data = await res.json();
+        document.getElementById("result").innerText = data.result || "결과 없음";
+        await loadCodeReviewHistory();
+      } catch (e) {
+        document.getElementById("result").innerText = "코드 분석 중 오류가 발생했습니다.";
+      }
+    }
+
+    async function loadHistory() {
+      try {
+        const res = await fetch(`${API_BASE}/history?user_id=${getUserId()}`);
+        const data = await res.json();
+        const history = data.history || [];
+        const list = document.getElementById("historyList");
+
+        if (history.length === 0) {
+          list.innerHTML = `<div class="empty-state">분석 기록이 없습니다.</div>`;
+          return;
+        }
+
+        list.innerHTML = history.map(item => `
+          <div class="history-item">
+            <div class="item-top">
+              <span class="badge badge-error">ERROR</span>
+              <div class="item-date">${escapeHtml(item.created_at)}</div>
+            </div>
+            <div class="history-error-box">${escapeHtml(item.error_text)}</div>
+            <div class="history-result-box">${escapeHtml(item.result_text)}</div>
+          </div>
+        `).join("");
+      } catch (e) {
+        document.getElementById("historyList").innerHTML = `<div class="empty-state">분석 기록 로드 실패</div>`;
+      }
+    }
+
+    async function loadCodeReviewHistory() {
+      try {
+        const res = await fetch(`${API_BASE}/code-review-history?user_id=${getUserId()}`);
+        const data = await res.json();
+        const history = data.history || [];
+        const list = document.getElementById("codeReviewList");
+
+        if (history.length === 0) {
+          list.innerHTML = `<div class="empty-state">코드 분석 기록이 없습니다.</div>`;
+          return;
+        }
+
+        list.innerHTML = history.map(item => `
+          <div class="code-item">
+            <div class="item-top">
+              <span class="badge badge-code">CODE</span>
+              <div class="item-date">${escapeHtml(item.created_at)}</div>
+            </div>
+            <div class="code-input-box">${escapeHtml(item.code_text)}</div>
+            <div class="code-result-box">${escapeHtml(item.result_text)}</div>
+          </div>
+        `).join("");
+      } catch (e) {
+        document.getElementById("codeReviewList").innerHTML = `<div class="empty-state">코드 분석 기록 로드 실패</div>`;
+      }
+    }
+
+    async function saveJournal() {
+      const content = document.getElementById("journalInput").value.trim();
+
+      if (!content) {
+        alert("기록 내용을 입력하세요.");
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/journal`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            user_id: getUserId(),
+            content
+          })
+        });
+
+        const data = await res.json();
+        alert(data.message || "저장 완료");
+        document.getElementById("journalInput").value = "";
+        await loadJournal();
+        await loadChart();
+      } catch (e) {
+        alert("기록 저장 중 오류가 발생했습니다.");
+      }
+    }
+
+    async function updateJournal(journalId, oldContent) {
+      const newContent = prompt("수정할 내용을 입력하세요.", oldContent);
+      if (newContent === null) return;
+      if (!newContent.trim()) {
+        alert("수정할 내용을 입력하세요.");
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/journal/${journalId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            user_id: getUserId(),
+            content: newContent
+          })
+        });
+
+        const data = await res.json();
+        alert(data.message || "수정 완료");
+        await loadJournal();
+      } catch (e) {
+        alert("기록 수정 중 오류가 발생했습니다.");
+      }
+    }
+
+    async function deleteJournal(journalId) {
+      if (!confirm("이 기록을 삭제할까요?")) return;
+
+      try {
+        const res = await fetch(`${API_BASE}/journal/${journalId}?user_id=${getUserId()}`, {
+          method: "DELETE"
+        });
+
+        const data = await res.json();
+        alert(data.message || "삭제 완료");
+        await loadJournal();
+        await loadChart();
+      } catch (e) {
+        alert("기록 삭제 중 오류가 발생했습니다.");
+      }
+    }
+
+    async function loadJournal() {
+      try {
+        const res = await fetch(`${API_BASE}/journal?user_id=${getUserId()}`);
+        const data = await res.json();
+        const journal = data.journal || [];
+        const list = document.getElementById("journalList");
+
+        if (journal.length === 0) {
+          list.innerHTML = `<div class="empty-state">기록일기가 없습니다.</div>`;
+          return;
+        }
+
+        list.innerHTML = journal.map(item => `
+          <div class="journal-item">
+            <div class="item-top">
+              <span class="badge badge-journal">JOURNAL</span>
+              <div class="item-date">${escapeHtml(item.created_at)}</div>
+            </div>
+            <div class="journal-content-box">${escapeHtml(item.content)}</div>
+            <div class="btn-row">
+              <button class="edit-btn" onclick='updateJournal(${item.id}, ${JSON.stringify(item.content)})'>수정</button>
+              <button class="delete-btn" onclick="deleteJournal(${item.id})">삭제</button>
+            </div>
+          </div>
+        `).join("");
+      } catch (e) {
+        document.getElementById("journalList").innerHTML = `<div class="empty-state">기록일기 로드 실패</div>`;
+      }
+    }
+
+    async function loadChart() {
+      try {
+        const res = await fetch(`${API_BASE}/exam-stats?user_id=${getUserId()}`);
+        const data = await res.json();
+        const labels = Array.isArray(data.dates) ? data.dates : [];
+        const scores = Array.isArray(data.scores) ? data.scores : [];
+
+        const ctx = document.getElementById("growthChart").getContext("2d");
+
+        if (chartInstance) {
+          chartInstance.destroy();
+        }
+
+        chartInstance = new Chart(ctx, {
+          type: "line",
+          data: {
+            labels,
+            datasets: [{
+              label: "시험 점수",
+              data: scores,
+              tension: 0.25,
+              fill: false
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                labels: {
+                  color: getComputedStyle(document.documentElement).getPropertyValue("--text").trim()
+                }
+              }
+            },
+            scales: {
+              x: {
+                ticks: {
+                  color: getComputedStyle(document.documentElement).getPropertyValue("--muted").trim()
+                },
+                grid: {
+                  color: getComputedStyle(document.documentElement).getPropertyValue("--line").trim()
+                }
+              },
+              y: {
+                beginAtZero: true,
+                suggestedMax: 100,
+                ticks: {
+                  color: getComputedStyle(document.documentElement).getPropertyValue("--muted").trim()
+                },
+                grid: {
+                  color: getComputedStyle(document.documentElement).getPropertyValue("--line").trim()
+                }
+              }
+            }
+          }
+        });
+      } catch (e) {
+        const wrap = document.querySelector(".chart-wrap");
+        if (wrap) {
+          wrap.innerHTML = `<div class="empty-state">성장 그래프를 불러오지 못했습니다.</div>`;
+        }
+      }
+    }
+
+    async function initPage() {
+      if (!initPageBase()) return;
+
+      await loadProfileCustom();
+      await loadHistory();
+      await loadCodeReviewHistory();
+      await loadJournal();
+      await loadChart();
+    }
+
+    initPage();
+  </script>
+</body>
+</html>
