@@ -720,8 +720,11 @@ def solution(nums):
     </div>
   </section>
 
+  <script src="js/config.js"></script>
+  <script src="js/common.js"></script>
   <script>
-    const API_BASE = "https://developer-assistant-2.onrender.com";
+    const API_BASE = AppCommon.getApiBase();
+    const escapeHtml = AppCommon.escapeHtml;
 
     let selectedExamId = null;
     let selectedQuestionId = null;
@@ -730,60 +733,22 @@ def solution(nums):
     let currentUser = null;
     let profileCustomState = null;
 
-    function getLoggedInUser() {
-      const raw = localStorage.getItem("loggedInUser");
-      if (!raw) return null;
-      try {
-        return JSON.parse(raw);
-      } catch (e) {
-        return null;
-      }
-    }
-
-    function requireLogin() {
-      currentUser = getLoggedInUser();
-      if (!currentUser || !currentUser.id) {
-        localStorage.removeItem("loggedInUser");
-        location.href = "login.html";
-        return false;
-      }
-      return true;
-    }
-
-    function updateUserChip() {
-      const chip = document.getElementById("userChip");
-      if (!currentUser) {
-        chip.innerText = "로그인 정보 없음";
-        return;
-      }
-      chip.innerText = `👤 ${currentUser.username} (${currentUser.email})`;
-    }
-
     function logout() {
-      localStorage.removeItem("loggedInUser");
-      location.href = "login.html";
-    }
-
-    function applyTheme(theme) {
-      document.documentElement.setAttribute("data-theme", theme);
-      localStorage.setItem("theme", theme);
+      AppCommon.logout();
     }
 
     function toggleTheme() {
-      const current = document.documentElement.getAttribute("data-theme") || "dark";
-      applyTheme(current === "dark" ? "light" : "dark");
+      AppCommon.toggleTheme();
     }
 
-    function initTheme() {
-      const saved = localStorage.getItem("theme") || "dark";
-      applyTheme(saved);
-    }
+    function initPageBase() {
+      AppCommon.initTheme();
 
-    function escapeHtml(text) {
-      return String(text ?? "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;");
+      currentUser = AppCommon.requireLogin();
+      if (!currentUser) return false;
+
+      AppCommon.updateUserChip(currentUser);
+      return true;
     }
 
     function setBoxMessage(elementId, message, type = "default") {
@@ -915,9 +880,12 @@ def solution(nums):
     }
 
     function resetExamForm() {
+      selectedExamId = null;
       document.getElementById("examTitle").value = "";
       document.getElementById("examDescription").value = "";
       document.getElementById("examDifficulty").value = "easy";
+      document.getElementById("selectedExamBox").innerText = "선택된 시험이 없습니다.";
+      renderExamList();
       setBoxMessage("createExamResult", "아직 없음");
     }
 
@@ -1384,27 +1352,25 @@ def solution(nums):
         document.getElementById("starterCode").value = "";
         document.getElementById("testCases").value = "";
       } else {
+        document.getElementById("multipleOptions").value = "";
+        document.getElementById("multipleAnswer").value = "";
         document.getElementById("starterCode").value = question.starter_code || "";
         document.getElementById("testCases").value = question.test_cases
           ? JSON.stringify(question.test_cases, null, 2)
           : "";
-        document.getElementById("multipleOptions").value = "";
-        document.getElementById("multipleAnswer").value = "";
       }
 
       toggleQuestionForm();
       renderQuestionList();
-      setBoxMessage("addQuestionResult", `문제 ${question.id} 수정 모드`, "warning");
+      setBoxMessage("addQuestionResult", "선택한 문제를 수정하거나 삭제할 수 있습니다.", "warning");
     }
 
     async function initPage() {
-      initTheme();
-      if (!requireLogin()) return;
-      updateUserChip();
+      if (!initPageBase()) return;
+
       toggleQuestionForm();
       await loadProfileCustom();
       await loadExams();
-      renderQuestionList();
     }
 
     initPage();
