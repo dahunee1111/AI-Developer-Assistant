@@ -159,25 +159,11 @@
       background: linear-gradient(135deg, var(--hero-grad-1), var(--hero-grad-2)), var(--panel);
     }
 
-    .hero.custom-theme-blue_neon {
-      background: linear-gradient(135deg, rgba(8,47,73,0.98), rgba(14,116,144,0.88)), var(--panel);
-    }
-
-    .hero.custom-theme-purple_galaxy {
-      background: linear-gradient(135deg, rgba(46,16,101,0.98), rgba(88,28,135,0.88)), var(--panel);
-    }
-
-    .hero.custom-theme-emerald_forest {
-      background: linear-gradient(135deg, rgba(6,78,59,0.98), rgba(20,83,45,0.90)), var(--panel);
-    }
-
-    .hero.custom-theme-crimson_sunset {
-      background: linear-gradient(135deg, rgba(127,29,29,0.98), rgba(194,65,12,0.90)), var(--panel);
-    }
-
-    .hero.custom-theme-silver_minimal {
-      background: linear-gradient(135deg, rgba(51,65,85,0.96), rgba(100,116,139,0.84)), var(--panel);
-    }
+    .hero.custom-theme-blue_neon { background: linear-gradient(135deg, rgba(8,47,73,0.98), rgba(14,116,144,0.88)), var(--panel); }
+    .hero.custom-theme-purple_galaxy { background: linear-gradient(135deg, rgba(46,16,101,0.98), rgba(88,28,135,0.88)), var(--panel); }
+    .hero.custom-theme-emerald_forest { background: linear-gradient(135deg, rgba(6,78,59,0.98), rgba(20,83,45,0.90)), var(--panel); }
+    .hero.custom-theme-crimson_sunset { background: linear-gradient(135deg, rgba(127,29,29,0.98), rgba(194,65,12,0.90)), var(--panel); }
+    .hero.custom-theme-silver_minimal { background: linear-gradient(135deg, rgba(51,65,85,0.96), rgba(100,116,139,0.84)), var(--panel); }
 
     .hero::before {
       content: "";
@@ -431,7 +417,6 @@
     .badge-partial { background: rgba(250,204,21,0.14); color: #fde68a; }
     .badge-reviewed { background: rgba(34,197,94,0.14); color: #bbf7d0; }
     .badge-pending { background: rgba(239,68,68,0.14); color: #fecaca; }
-    .badge-point { background: rgba(34,197,94,0.14); color: #bbf7d0; }
 
     .summary-grid {
       display: grid;
@@ -597,11 +582,6 @@
     .empty-state {
       color: var(--muted);
       padding: 10px 2px;
-    }
-
-    .note-grid {
-      display: grid;
-      gap: 12px;
     }
 
     .note-highlight {
@@ -887,8 +867,11 @@
     </main>
   </section>
 
+  <script src="js/config.js"></script>
+  <script src="js/common.js"></script>
   <script>
-    const API_BASE = "https://developer-assistant-2.onrender.com";
+    const API_BASE = AppCommon.getApiBase();
+    const escapeHtml = AppCommon.escapeHtml;
 
     let examListData = [];
     let currentExamId = null;
@@ -901,77 +884,26 @@
     let currentUser = null;
     let profileCustomState = null;
 
-    function escapeHtml(text) {
-      return String(text ?? "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;");
-    }
-
-    function escapeJs(text) {
-      return String(text ?? "")
-        .replaceAll("\\", "\\\\")
-        .replaceAll("'", "\\'")
-        .replaceAll('"', '\\"')
-        .replaceAll("\n", "\\n")
-        .replaceAll("\r", "");
-    }
-
-    function getLoggedInUser() {
-      const raw = localStorage.getItem("loggedInUser");
-      if (!raw) return null;
-
-      try {
-        return JSON.parse(raw);
-      } catch (e) {
-        return null;
-      }
-    }
-
-    function requireLogin() {
-      currentUser = getLoggedInUser();
-
-      if (!currentUser || !currentUser.id) {
-        localStorage.removeItem("loggedInUser");
-        location.href = "login.html";
-        return false;
-      }
-
-      return true;
-    }
-
     function getUserId() {
-      return currentUser?.id;
-    }
-
-    function updateUserChip() {
-      const chip = document.getElementById("userChip");
-      if (!currentUser) {
-        chip.innerText = "로그인 정보 없음";
-        return;
-      }
-
-      chip.innerText = `👤 ${currentUser.username} (${currentUser.email})`;
+      return currentUser?.id ?? null;
     }
 
     function logout() {
-      localStorage.removeItem("loggedInUser");
-      location.href = "login.html";
-    }
-
-    function applyTheme(theme) {
-      document.documentElement.setAttribute("data-theme", theme);
-      localStorage.setItem("theme", theme);
+      AppCommon.logout();
     }
 
     function toggleTheme() {
-      const current = document.documentElement.getAttribute("data-theme") || "dark";
-      applyTheme(current === "dark" ? "light" : "dark");
+      AppCommon.toggleTheme();
     }
 
-    function initTheme() {
-      const saved = localStorage.getItem("theme") || "dark";
-      applyTheme(saved);
+    function initPageBase() {
+      AppCommon.initTheme();
+
+      currentUser = AppCommon.requireLogin();
+      if (!currentUser) return false;
+
+      AppCommon.updateUserChip(currentUser);
+      return true;
     }
 
     function clearCustomVisuals() {
@@ -1094,55 +1026,14 @@
 
         document.getElementById("currentPointBox").innerHTML = `
           <div class="point-strong">${data.total_points ?? 0}P</div>
-          <div class="point-sub">시험 제출과 성과에 따라 포인트를 획득할 수 있어요.</div>
+          <div class="point-sub">현재 보유 포인트</div>
         `;
       } catch (e) {
         document.getElementById("currentPointBox").innerHTML = `
           <div class="point-strong">-</div>
-          <div class="point-sub">포인트 정보를 불러오지 못했습니다.</div>
+          <div class="point-sub">포인트 로드 실패</div>
         `;
       }
-    }
-
-    function renderPointReward(data) {
-      const box = document.getElementById("pointRewardBox");
-      const rewards = Array.isArray(data.awarded_points) ? data.awarded_points : [];
-      const totalPoints = data.total_points ?? 0;
-
-      if (rewards.length === 0) {
-        box.innerHTML = `현재 총 포인트: ${totalPoints}P`;
-        return;
-      }
-
-      box.innerHTML = `
-이번 시험으로 획득한 포인트
-${rewards.map(item => `+${item.amount}P / ${item.reason}`).join("\n")}
-
-현재 총 포인트: ${totalPoints}P
-      `;
-
-      loadCurrentPoints();
-    }
-
-    function getRetryExamId(note) {
-      if (note.exam_set_id) return note.exam_set_id;
-
-      const matchedExam = examListData.find(x => x.title === note.exam_title);
-      return matchedExam ? matchedExam.id : null;
-    }
-
-    async function initPage() {
-      initTheme();
-
-      if (!requireLogin()) return;
-      updateUserChip();
-
-      await loadProfileCustom();
-      await loadCurrentPoints();
-      await loadExams();
-      await loadExamInsights();
-      await loadExamResultsSummary();
-      await loadWrongNotes();
     }
 
     async function loadExamInsights() {
@@ -1168,13 +1059,11 @@ ${rewards.map(item => `+${item.amount}P / ${item.reason}`).join("\n")}
             <div class="box box-blue">${escapeHtml(data.recommendation_reason || "")}</div>
 
             <div class="label" style="margin-top:10px;">추천 시험</div>
-            <div class="box">
-${
-  recommendations.length > 0
-    ? recommendations.map(item => `- ${item.title} (${item.difficulty})`).join("\n")
-    : "추천 시험이 없습니다."
-}
-            </div>
+            <div class="box">${
+              recommendations.length > 0
+                ? recommendations.map(item => `- ${item.title} (${item.difficulty})`).join("\n")
+                : "추천 시험이 없습니다."
+            }</div>
           </div>
         `;
       } catch (e) {
@@ -1259,74 +1148,91 @@ ${
         btn.innerText = index + 1;
         btn.className = index === currentQuestionIndex ? "active" : "";
         btn.classList.add(hasAnswer ? "answered" : "not-answered");
+
         btn.onclick = () => {
           currentQuestionIndex = index;
           renderQuestionNav();
           renderCurrentQuestion();
         };
+
         nav.appendChild(btn);
       });
 
       document.getElementById("examProgress").innerText =
-        `${countAnsweredQuestions()} / ${currentQuestions.length} 문제 응답`;
+        `${countAnsweredQuestions()} / ${currentQuestions.length}`;
     }
 
     function renderCurrentQuestion() {
-      const q = currentQuestions[currentQuestionIndex];
       const container = document.getElementById("questionContainer");
+      const question = currentQuestions[currentQuestionIndex];
 
-      if (!q) {
-        container.innerHTML = `<div class="box box-red">문제를 불러오지 못했습니다.</div>`;
+      if (!question) {
+        container.innerHTML = `<div class="empty-state">문제가 없습니다.</div>`;
         return;
       }
 
-      let html = `
-        <div class="question-card">
-          <h3>문제 ${currentQuestionIndex + 1}. ${escapeHtml(q.question_text)}</h3>
-          <div class="meta">유형: ${q.question_type === "multiple" ? "객관식" : "코드 문제"} / 배점: ${q.score}점</div>
-      `;
+      if (question.question_type === "multiple") {
+        const savedAnswer = answers[question.id]?.answer || "";
 
-      if (q.question_type === "multiple") {
-        html += `<div class="options">`;
-        html += (q.options || []).map(option => `
-          <label class="option-item">
-            <input
-              type="radio"
-              name="question-${q.id}"
-              value="${escapeHtml(option)}"
-              ${answers[q.id]?.answer === option ? "checked" : ""}
-              onchange="saveMultipleAnswer(${q.id}, '${escapeJs(option)}')"
-            >
-            ${escapeHtml(option)}
-          </label>
-        `).join("");
-        html += `</div>`;
-      }
+        container.innerHTML = `
+          <div class="question-card">
+            <h3>문제 ${currentQuestionIndex + 1}</h3>
+            <div class="meta">${escapeHtml(question.question_text || "")}</div>
+            <div class="badge-row">
+              <span class="badge badge-exam">객관식</span>
+              <span class="badge badge-score">${question.score || 0}점</span>
+            </div>
 
-      if (q.question_type === "code") {
-        const codeValue = answers[q.id]?.code ?? q.starter_code ?? "";
-        html += `
-          <textarea id="codeAnswer" oninput="saveCodeAnswer(${q.id}, this.value)">${escapeHtml(codeValue)}</textarea>
+            <div class="options">
+              ${(Array.isArray(question.options) ? question.options : []).map(option => `
+                <label class="option-item">
+                  <input
+                    type="radio"
+                    name="question-${question.id}"
+                    value="${escapeHtml(option)}"
+                    ${savedAnswer === option ? "checked" : ""}
+                    onchange="saveMultipleAnswer(${question.id}, ${JSON.stringify(option)})"
+                  >
+                  ${escapeHtml(option)}
+                </label>
+              `).join("")}
+            </div>
+          </div>
         `;
+        return;
       }
 
-      html += `</div>`;
-      container.innerHTML = html;
+      if (question.question_type === "code") {
+        const savedCode = answers[question.id]?.code ?? question.starter_code ?? "";
+
+        container.innerHTML = `
+          <div class="question-card">
+            <h3>문제 ${currentQuestionIndex + 1}</h3>
+            <div class="meta">${escapeHtml(question.question_text || "")}</div>
+            <div class="badge-row">
+              <span class="badge badge-exam">코드 문제</span>
+              <span class="badge badge-score">${question.score || 0}점</span>
+            </div>
+            <textarea
+              id="codeAnswerInput"
+              placeholder="solution 함수를 작성하세요."
+              oninput="saveCodeAnswer(${question.id}, this.value)"
+            >${escapeHtml(savedCode)}</textarea>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = `<div class="empty-state">지원하지 않는 문제 유형입니다.</div>`;
     }
 
-    function saveMultipleAnswer(questionId, option) {
-      answers[questionId] = {
-        question_id: questionId,
-        answer: option
-      };
+    function saveMultipleAnswer(questionId, answer) {
+      answers[questionId] = { answer };
       renderQuestionNav();
     }
 
-    function saveCodeAnswer(questionId, value) {
-      answers[questionId] = {
-        question_id: questionId,
-        code: value
-      };
+    function saveCodeAnswer(questionId, code) {
+      answers[questionId] = { code };
       renderQuestionNav();
     }
 
@@ -1461,16 +1367,10 @@ ${
       document.getElementById("correctCountBox").innerText = summary.correctCount;
       document.getElementById("wrongCountBox").innerText = summary.wrongCount;
       document.getElementById("partialCountBox").innerText = summary.partialCount;
-      document.getElementById("resultSubmittedAt").innerText = escapeHtml(data.submitted_at || "채점 완료");
+      document.getElementById("resultSubmittedAt").innerText =
+        data.submitted_at ? `제출 시각: ${data.submitted_at}` : "방금 제출";
 
-      const list = document.getElementById("resultList");
-
-      if (detail.length === 0) {
-        list.innerHTML = `<div class="empty-state">표시할 채점 결과가 없습니다.</div>`;
-        return;
-      }
-
-      list.innerHTML = detail.map((item, index) => {
+      document.getElementById("resultList").innerHTML = detail.map((item, index) => {
         let statusBadge = "";
         let statusBoxClass = "box-blue";
         let reviewText = "";
@@ -1479,11 +1379,11 @@ ${
           if (item.is_correct) {
             statusBadge = `<span class="badge badge-correct">정답</span>`;
             statusBoxClass = "box-green";
-            reviewText = "개념을 정확히 이해하고 있습니다.";
+            reviewText = "객관식 정답입니다.";
           } else {
             statusBadge = `<span class="badge badge-wrong">오답</span>`;
             statusBoxClass = "box-red";
-            reviewText = item.analysis || "정답과 내가 선택한 답을 비교해서 개념 차이를 복습하세요.";
+            reviewText = item.ai_explanation || "객관식 오답입니다. 정답과 내 답을 비교해보세요.";
           }
         } else {
           const judge = item.judge_result || {};
@@ -1532,6 +1432,43 @@ ${escapeHtml(item.user_code || "(없음)")}</div>
         bodyHtml += `</div>`;
         return bodyHtml;
       }).join("");
+    }
+
+    function renderPointReward(data) {
+      const awarded = Array.isArray(data.awarded_points) ? data.awarded_points : [];
+      const lines = awarded.length > 0
+        ? awarded.map(item => `+${item.amount}P - ${item.reason}`).join("\n")
+        : "획득 포인트 정보가 없습니다.";
+
+      document.getElementById("pointRewardBox").innerText =
+`획득 포인트
+${lines}
+
+현재 총 포인트: ${data.total_points ?? "-"}`;
+    }
+
+    async function loadExamResultsSummary() {
+      try {
+        const res = await fetch(`${API_BASE}/exam-results?user_id=${getUserId()}`);
+        const data = await res.json();
+        const results = Array.isArray(data.results) ? data.results : [];
+
+        if (results.length === 0) {
+          document.getElementById("summaryRecentScore").innerText = "-";
+          document.getElementById("summaryWrongCount").innerText = "-";
+          return;
+        }
+
+        const latest = results[0];
+        document.getElementById("summaryRecentScore").innerText = latest.total_score ?? "-";
+
+        const detail = Array.isArray(latest.detail_result) ? latest.detail_result : [];
+        const summary = summarizeDetail(detail);
+        document.getElementById("summaryWrongCount").innerText = summary.wrongCount + summary.partialCount;
+      } catch (e) {
+        document.getElementById("summaryRecentScore").innerText = "-";
+        document.getElementById("summaryWrongCount").innerText = "-";
+      }
     }
 
     function restartExamArea() {
@@ -1738,61 +1675,56 @@ ${escapeHtml(note.ai_explanation)}</div>`
       }
 
       if (retryNote.question_type === "multiple") {
-        const checked = document.querySelector('input[name="retry-answer"]:checked');
-        if (!checked) {
+        const selected = document.querySelector('input[name="retry-answer"]:checked');
+        if (!selected) {
           alert("답을 선택하세요.");
           return;
         }
 
-        const isCorrect = checked.value === retryNote.correct_answer;
-        alert(isCorrect ? "정답입니다!" : "아직 오답입니다.");
-      } else {
-        const code = document.getElementById("retryCodeInput")?.value ?? "";
-        if (!code.trim()) {
-          alert("코드를 입력하세요.");
-          return;
-        }
-        alert("다시 제출이 완료되었습니다. 실제 재채점 확장은 다음 단계에서 연결하면 됩니다.");
-      }
-    }
+        const isCorrect = selected.value === (retryNote.correct_answer || "");
+        alert(isCorrect ? "정답입니다! 복습완료 처리합니다." : "아직 오답입니다. 다시 확인해보세요.");
 
-    async function loadExamResultsSummary() {
+        if (isCorrect) {
+          await markWrongNoteReviewed(retryNote.id, true);
+          cancelRetry();
+        }
+        return;
+      }
+
+      const retryCode = document.getElementById("retryCodeInput")?.value.trim() || "";
+      if (!retryCode) {
+        alert("코드를 입력하세요.");
+        return;
+      }
+
       try {
-        const res = await fetch(`${API_BASE}/exam-results?user_id=${getUserId()}`);
+        const res = await fetch(`${API_BASE}/code-review`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            user_id: getUserId(),
+            code: retryCode
+          })
+        });
+
         const data = await res.json();
-        const results = Array.isArray(data.results) ? data.results : [];
-
-        if (results.length === 0) {
-          document.getElementById("summaryRecentScore").innerText = "-";
-          document.getElementById("summaryWrongCount").innerText = "-";
-          return;
-        }
-
-        const latest = results[0];
-        document.getElementById("summaryRecentScore").innerText = latest.total_score ?? "-";
-
-        let wrongCount = 0;
-        try {
-          const detail = JSON.parse(latest.detail_result || "[]");
-          detail.forEach(item => {
-            if (item.question_type === "multiple" && !item.is_correct) wrongCount++;
-            if (item.question_type === "code") {
-              const judge = item.judge_result || {};
-              if ((judge.passed_count || 0) < (judge.total_count || 0)) wrongCount++;
-            }
-          });
-        } catch (e) {}
-
-        document.getElementById("summaryWrongCount").innerText = wrongCount;
+        alert((data.result || "코드 리뷰 완료") + "\n\n복습완료 처리합니다.");
+        await markWrongNoteReviewed(retryNote.id, true);
+        cancelRetry();
       } catch (e) {
-        document.getElementById("summaryRecentScore").innerText = "-";
-        document.getElementById("summaryWrongCount").innerText = "-";
+        alert("다시풀기 제출 중 오류가 발생했습니다.");
       }
     }
 
-    async function loadExamResultsOnly() {
+    async function initPage() {
+      if (!initPageBase()) return;
+
+      await loadProfileCustom();
+      await loadCurrentPoints();
+      await loadExams();
+      await loadExamInsights();
       await loadExamResultsSummary();
-      alert("최근 결과 요약을 새로고침했습니다.");
+      await loadWrongNotes();
     }
 
     initPage();
