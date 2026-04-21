@@ -286,8 +286,10 @@
     </div>
   </div>
 
+  <script src="js/config.js"></script>
+  <script src="js/common.js"></script>
   <script>
-    const API_BASE = "http://127.0.0.1:8000";
+    const API_BASE = AppCommon.getApiBase();
 
     function setMessage(msg, type = "") {
       const box = document.getElementById("resultBox");
@@ -300,13 +302,6 @@
       const box = document.getElementById("resultBox");
       box.className = "result-box";
       box.innerText = "";
-    }
-
-    function redirectIfLoggedIn() {
-      const user = localStorage.getItem("loggedInUser");
-      if (user) {
-        location.href = "index.html";
-      }
     }
 
     async function login() {
@@ -334,7 +329,7 @@
           return;
         }
 
-        localStorage.setItem("loggedInUser", JSON.stringify(data.user));
+        AppCommon.saveLoggedInUser(data.user);
         setMessage("로그인 성공! 이동 중...", "success");
 
         setTimeout(() => {
@@ -354,7 +349,7 @@
       }
     });
 
-    redirectIfLoggedIn();
+    AppCommon.redirectIfLoggedIn();
   </script>
 </body>
 </html>
