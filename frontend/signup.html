@@ -359,8 +359,10 @@
     </section>
   </div>
 
+  <script src="js/config.js"></script>
+  <script src="js/common.js"></script>
   <script>
-    const API_BASE = "http://127.0.0.1:8000";
+    const API_BASE = AppCommon.getApiBase();
 
     function setMessage(message, type = "") {
       const box = document.getElementById("resultBox");
@@ -377,13 +379,6 @@
       const box = document.getElementById("resultBox");
       box.className = "result-box";
       box.innerText = "";
-    }
-
-    function goIfAlreadyLoggedIn() {
-      const savedUser = localStorage.getItem("loggedInUser");
-      if (savedUser) {
-        location.href = "index.html";
-      }
     }
 
     async function signup() {
@@ -447,7 +442,13 @@
     document.getElementById("password").addEventListener("input", clearMessage);
     document.getElementById("passwordConfirm").addEventListener("input", clearMessage);
 
-    goIfAlreadyLoggedIn();
+    document.getElementById("passwordConfirm").addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        signup();
+      }
+    });
+
+    AppCommon.redirectIfLoggedIn();
   </script>
 </body>
 </html>
