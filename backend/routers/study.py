@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Query
 from pydantic import BaseModel
 from datetime import datetime, date
+import os
 import requests
-import json
 
 from db import (
     get_conn,
@@ -35,26 +35,60 @@ class AttendanceRequest(BaseModel):
 
 
 # ====== 내부 유틸 ======
-def call_ollama(prompt: str) -> str:
+def call_huggingface(prompt: str) -> str:
     """
-    로컬 Ollama 서버 호출 (없으면 간단한 fallback 반환)
+    Hugging Face Inference Providers 호출
+    Render 환경변수 HF_TOKEN 필요
+    선택 환경변수 HF_MODEL로 모델 변경 가능
     """
+    hf_token = os.getenv("HF_TOKEN")
+    hf_model = os.getenv("HF_MODEL", "openai/gpt-oss-20b:fireworks-ai")
+
+    if not hf_token:
+        return "Hugging Face API 토큰이 설정되지 않았습니다. Render 환경변수 HF_TOKEN을 확인해주세요."
+
     try:
         res = requests.post(
-            "http://localhost:11434/api/generate",
-            json={
-                "model": "llama3",
-                "prompt": prompt,
-                "stream": False,
+            "https://router.huggingface.co/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {hf_token}",
+                "Content-Type": "application/json",
             },
-            timeout=15,
+            json={
+                "model": hf_model,
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": (
+                            "너는 Python, FastAPI, AI 개발 학습을 돕는 한국어 튜터다. "
+                            "초보자도 이해할 수 있게 원인, 해결 방법, 예시를 명확히 설명한다."
+                        ),
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt,
+                    },
+                ],
+                "max_tokens": 700,
+                "temperature": 0.2,
+            },
+            timeout=40,
         )
-        if res.status_code == 200:
-            data = res.json()
-            return data.get("response", "").strip() or "AI 응답이 비어 있습니다."
-        return f"Ollama 오류: {res.status_code}"
-    except Exception:
-        return "AI 서버에 연결할 수 없습니다. (Ollama 미실행 혹은 네트워크 문제)"
+
+        if res.status_code != 200:
+            return f"Hugging Face API 오류: {res.status_code}\n{res.text}"
+
+        data = res.json()
+
+        try:
+            return data["choices"][0]["message"]["content"].strip()
+        except (KeyError, IndexError, TypeError):
+            return f"Hugging Face 응답 형식 오류:\n{data}"
+
+    except requests.exceptions.Timeout:
+        return "Hugging Face API 응답 시간이 초과되었습니다. 잠시 후 다시 시도해주세요."
+    except Exception as e:
+        return f"Hugging Face 연결 오류: {str(e)}"
 
 
 def now_str() -> str:
@@ -74,12 +108,21 @@ def analyze_error(data: ErrorRequest):
         conn.close()
         return {"message": "유효하지 않은 사용자입니다."}
 
-    prompt = f"""다음 Python 에러를 초보자도 이해할 수 있게 설명하고 해결 방법을 단계별로 알려줘:
+    prompt = f"""다음 Python 에러를 초보자도 이해할 수 있게 분석해줘.
+
+아래 형식으로 답변해줘.
+
+1. 에러 원인
+2. 왜 발생했는지
+3. 해결 방법
+4. 수정 예시 또는 확인할 코드
+5. 다시 안 나게 하는 팁
 
 에러:
 {data.error_text}
 """
-    result = call_ollama(prompt)
+
+    result = call_huggingface(prompt)
 
     cursor.execute("""
         INSERT INTO analysis_history (user_id, error_text, result_text, created_at)
@@ -106,14 +149,20 @@ def code_review(data: CodeRequest):
         return {"message": "유효하지 않은 사용자입니다."}
 
     prompt = f"""다음 Python 코드를 리뷰해줘.
-- 문제점
-- 개선 포인트
-- 더 나은 코드 예시
+
+아래 형식으로 답변해줘.
+
+1. 코드의 목적 추정
+2. 문제점
+3. 개선 포인트
+4. 더 나은 코드 예시
+5. 학습 포인트
 
 코드:
 {data.code_text}
 """
-    result = call_ollama(prompt)
+
+    result = call_huggingface(prompt)
 
     cursor.execute("""
         INSERT INTO code_review_history (user_id, code_text, result_text, created_at)
