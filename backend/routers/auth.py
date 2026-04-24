@@ -9,6 +9,8 @@ from db import (
     hash_password,
 )
 
+from auth_security import create_access_token
+
 router = APIRouter()
 
 
@@ -59,8 +61,16 @@ def signup(data: SignupRequest):
 
     ensure_profile_custom_row(user_id)
 
+    access_token = create_access_token({
+        "user_id": user_id,
+        "email": email,
+        "username": username
+    })
+
     return {
         "message": "회원가입이 완료되었습니다.",
+        "access_token": access_token,
+        "token_type": "bearer",
         "user": {
             "id": user_id,
             "username": username,
@@ -97,8 +107,16 @@ def login(data: LoginRequest):
 
     ensure_profile_custom_row(user["id"])
 
+    access_token = create_access_token({
+        "user_id": user["id"],
+        "email": user["email"],
+        "username": user["username"]
+    })
+
     return {
         "message": "로그인 성공",
+        "access_token": access_token,
+        "token_type": "bearer",
         "user": {
             "id": user["id"],
             "username": user["username"],

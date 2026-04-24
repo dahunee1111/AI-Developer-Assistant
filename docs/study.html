@@ -856,13 +856,26 @@
         const res = await fetch(`${API_BASE}/analyze`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ user_id: getUserId(), error })
+          body: JSON.stringify({
+            user_id: getUserId(),
+            error_text: error
+          })
         });
 
         const data = await res.json();
-        document.getElementById("result").innerText = data.result || "결과 없음";
+
+        if (!res.ok) {
+          console.error("분석 API 오류:", data);
+          document.getElementById("result").innerText =
+            data.detail ? JSON.stringify(data.detail, null, 2) : "서버 오류가 발생했습니다.";
+          return;
+        }
+
+        document.getElementById("result").innerText =
+          data.result || data.analysis || data.message || "결과 없음";
         await loadHistory();
       } catch (e) {
+        console.error("분석 요청 실패:", e);
         document.getElementById("result").innerText = "분석 중 오류가 발생했습니다.";
       }
     }
