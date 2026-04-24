@@ -42,7 +42,10 @@ def call_huggingface(prompt: str) -> str:
     선택 환경변수 HF_MODEL로 모델 변경 가능
     """
     hf_token = os.getenv("HF_TOKEN")
-    hf_model = os.getenv("HF_MODEL", "openai/gpt-oss-20b:fireworks-ai")
+    hf_model = os.getenv(
+        "HF_MODEL",
+        "mistralai/Mistral-7B-Instruct-v0.3:featherless-ai"
+    )
 
     if not hf_token:
         return "Hugging Face API 토큰이 설정되지 않았습니다. Render 환경변수 HF_TOKEN을 확인해주세요."
@@ -61,8 +64,9 @@ def call_huggingface(prompt: str) -> str:
                         "role": "system",
                         "content": (
                             "너는 Python, FastAPI, AI 개발 학습을 돕는 한국어 튜터다. "
-                            "초보자도 이해할 수 있게 원인, 해결 방법, 예시를 명확히 설명한다. "
-                            "답변은 반드시 한국어로 한다."
+                            "답변은 반드시 한국어로 작성한다. "
+                            "내부 추론 과정은 절대 출력하지 않는다. "
+                            "초보자도 이해할 수 있게 짧고 실용적으로 설명한다."
                         ),
                     },
                     {
@@ -70,7 +74,7 @@ def call_huggingface(prompt: str) -> str:
                         "content": prompt,
                     },
                 ],
-                "max_tokens": 2000,
+                "max_tokens": 1200,
                 "temperature": 0.2,
             },
             timeout=40,
@@ -84,16 +88,17 @@ def call_huggingface(prompt: str) -> str:
         try:
             message = data["choices"][0]["message"]
 
-            content = (
-                message.get("content")
-                or message.get("reasoning_content")
-                or ""
-            )
+            # 중요:
+            # reasoning_content는 내부 추론 과정이므로 사용자에게 출력하지 않음
+            content = message.get("content") or ""
 
-            if content:
+            if content.strip():
                 return content.strip()
 
-            return f"Hugging Face 응답 형식 오류:\n{data}"
+            return (
+                "Hugging Face 응답에 출력 가능한 content가 없습니다. "
+                "HF_MODEL 환경변수를 다른 Instruct 모델로 변경해보세요."
+            )
 
         except (KeyError, IndexError, TypeError):
             return f"Hugging Face 응답 형식 오류:\n{data}"
@@ -124,7 +129,7 @@ def analyze_error(data: ErrorRequest):
 
     prompt = f"""다음 Python 에러를 한국어로 짧고 실용적으로 분석해줘.
 
-반드시 아래 형식으로 답변하고, 전체 답변은 700자 이내로 작성해줘.
+반드시 아래 형식으로 답변하고, 전체 답변은 너무 길지 않게 작성해줘.
 
 1. 에러 원인
 2. 왜 발생했는지
@@ -165,7 +170,7 @@ def code_review(data: CodeRequest):
 
     prompt = f"""다음 Python 코드를 한국어로 짧고 실용적으로 리뷰해줘.
 
-반드시 아래 형식으로 답변하고, 전체 답변은 900자 이내로 작성해줘.
+반드시 아래 형식으로 답변하고, 전체 답변은 너무 길지 않게 작성해줘.
 
 1. 코드 목적
 2. 문제점
