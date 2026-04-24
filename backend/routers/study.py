@@ -61,7 +61,8 @@ def call_huggingface(prompt: str) -> str:
                         "role": "system",
                         "content": (
                             "너는 Python, FastAPI, AI 개발 학습을 돕는 한국어 튜터다. "
-                            "초보자도 이해할 수 있게 원인, 해결 방법, 예시를 명확히 설명한다."
+                            "초보자도 이해할 수 있게 원인, 해결 방법, 예시를 명확히 설명한다. "
+                            "답변은 반드시 한국어로 한다."
                         ),
                     },
                     {
@@ -69,7 +70,7 @@ def call_huggingface(prompt: str) -> str:
                         "content": prompt,
                     },
                 ],
-                "max_tokens": 700,
+                "max_tokens": 1200,
                 "temperature": 0.2,
             },
             timeout=40,
@@ -81,12 +82,25 @@ def call_huggingface(prompt: str) -> str:
         data = res.json()
 
         try:
-            return data["choices"][0]["message"]["content"].strip()
+            message = data["choices"][0]["message"]
+
+            content = (
+                message.get("content")
+                or message.get("reasoning_content")
+                or ""
+            )
+
+            if content:
+                return content.strip()
+
+            return f"Hugging Face 응답 형식 오류:\n{data}"
+
         except (KeyError, IndexError, TypeError):
             return f"Hugging Face 응답 형식 오류:\n{data}"
 
     except requests.exceptions.Timeout:
         return "Hugging Face API 응답 시간이 초과되었습니다. 잠시 후 다시 시도해주세요."
+
     except Exception as e:
         return f"Hugging Face 연결 오류: {str(e)}"
 
@@ -128,6 +142,7 @@ def analyze_error(data: ErrorRequest):
         INSERT INTO analysis_history (user_id, error_text, result_text, created_at)
         VALUES (?, ?, ?, ?)
     """, (data.user_id, data.error_text, result, now_str()))
+
     conn.commit()
     conn.close()
 
@@ -168,6 +183,7 @@ def code_review(data: CodeRequest):
         INSERT INTO code_review_history (user_id, code_text, result_text, created_at)
         VALUES (?, ?, ?, ?)
     """, (data.user_id, data.code_text, result, now_str()))
+
     conn.commit()
     conn.close()
 
@@ -188,6 +204,7 @@ def get_history(user_id: int = Query(...)):
         WHERE user_id = ?
         ORDER BY id DESC
     """, (user_id,))
+
     rows = cursor.fetchall()
     conn.close()
 
@@ -205,6 +222,7 @@ def get_code_review_history(user_id: int = Query(...)):
         WHERE user_id = ?
         ORDER BY id DESC
     """, (user_id,))
+
     rows = cursor.fetchall()
     conn.close()
 
@@ -223,6 +241,7 @@ def get_journal(user_id: int = Query(...)):
         WHERE user_id = ?
         ORDER BY id DESC
     """, (user_id,))
+
     rows = cursor.fetchall()
     conn.close()
 
@@ -307,7 +326,7 @@ def get_attendance(user_id: int = Query(...)):
             "message": "사용자를 찾을 수 없습니다.",
             "attendance_dates": [],
             "today_checked": False,
-            "total_days": 0
+            "total_days": 0,
         }
 
     cursor.execute("""
@@ -337,7 +356,7 @@ def get_attendance(user_id: int = Query(...)):
     return {
         "attendance_dates": merged_dates,
         "today_checked": today in attendance_dates,
-        "total_days": len(merged_dates)
+        "total_days": len(merged_dates),
     }
 
 
@@ -358,6 +377,7 @@ def check_attendance(data: AttendanceRequest):
         FROM attendance_records
         WHERE user_id = ? AND attendance_date = ?
     """, (data.user_id, today))
+
     existing = cursor.fetchone()
 
     if existing:
@@ -366,13 +386,14 @@ def check_attendance(data: AttendanceRequest):
             "message": "오늘은 이미 출석체크를 완료했습니다.",
             "awarded_points": 0,
             "today_checked": True,
-            "total_points": get_total_points(data.user_id)
+            "total_points": get_total_points(data.user_id),
         }
 
     cursor.execute("""
         INSERT INTO attendance_records (user_id, attendance_date, created_at)
         VALUES (?, ?, ?)
     """, (data.user_id, today, created_at))
+
     conn.commit()
     conn.close()
 
@@ -383,7 +404,7 @@ def check_attendance(data: AttendanceRequest):
         "message": "출석체크 완료! 10포인트를 획득했습니다.",
         "awarded_points": 10,
         "today_checked": True,
-        "total_points": total_points
+        "total_points": total_points,
     }
 
 
@@ -401,7 +422,7 @@ def get_points(user_id: int = Query(...)):
 
     return {
         "user_id": user_id,
-        "total_points": get_total_points(user_id)
+        "total_points": get_total_points(user_id),
     }
 
 
@@ -412,7 +433,11 @@ def get_point_logs(user_id: int = Query(...)):
 
     if not user_exists(cursor, user_id):
         conn.close()
-        return {"message": "사용자를 찾을 수 없습니다.", "logs": [], "total_points": 0}
+        return {
+            "message": "사용자를 찾을 수 없습니다.",
+            "logs": [],
+            "total_points": 0,
+        }
 
     cursor.execute("""
         SELECT id, amount, reason, created_at
@@ -420,8 +445,8 @@ def get_point_logs(user_id: int = Query(...)):
         WHERE user_id = ?
         ORDER BY id DESC
     """, (user_id,))
-    rows = cursor.fetchall()
 
+    rows = cursor.fetchall()
     conn.close()
 
     return {
@@ -430,11 +455,11 @@ def get_point_logs(user_id: int = Query(...)):
                 "id": row["id"],
                 "amount": row["amount"],
                 "reason": row["reason"],
-                "created_at": row["created_at"]
+                "created_at": row["created_at"],
             }
             for row in rows
         ],
-        "total_points": get_total_points(user_id)
+        "total_points": get_total_points(user_id),
     }
 
 
@@ -454,13 +479,22 @@ def stats(user_id: int = Query(...)):
             "total_points": 0,
         }
 
-    cursor.execute("SELECT COUNT(*) as cnt FROM analysis_history WHERE user_id = ?", (user_id,))
+    cursor.execute(
+        "SELECT COUNT(*) as cnt FROM analysis_history WHERE user_id = ?",
+        (user_id,),
+    )
     analysis_cnt = cursor.fetchone()["cnt"]
 
-    cursor.execute("SELECT COUNT(*) as cnt FROM code_review_history WHERE user_id = ?", (user_id,))
+    cursor.execute(
+        "SELECT COUNT(*) as cnt FROM code_review_history WHERE user_id = ?",
+        (user_id,),
+    )
     review_cnt = cursor.fetchone()["cnt"]
 
-    cursor.execute("SELECT COUNT(*) as cnt FROM learning_journal WHERE user_id = ?", (user_id,))
+    cursor.execute(
+        "SELECT COUNT(*) as cnt FROM learning_journal WHERE user_id = ?",
+        (user_id,),
+    )
     journal_cnt = cursor.fetchone()["cnt"]
 
     conn.close()
