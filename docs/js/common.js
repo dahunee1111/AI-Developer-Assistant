@@ -27,8 +27,30 @@
     localStorage.setItem("loggedInUser", JSON.stringify(user));
   }
 
+  function saveAccessToken(token) {
+    if (!token) return;
+    localStorage.setItem("accessToken", token);
+  }
+
+  function getAccessToken() {
+    return localStorage.getItem("accessToken");
+  }
+
+  function getAuthHeaders() {
+    const token = getAccessToken();
+
+    if (!token) {
+      return {};
+    }
+
+    return {
+      Authorization: `Bearer ${token}`
+    };
+  }
+
   function clearLoggedInUser() {
     localStorage.removeItem("loggedInUser");
+    localStorage.removeItem("accessToken");
   }
 
   function requireLogin(redirectUrl = "login.html") {
@@ -98,11 +120,12 @@
 
   function jsonFetch(url, options = {}) {
     return fetch(url, {
+      ...options,
       headers: {
         "Content-Type": "application/json",
+        ...getAuthHeaders(),
         ...(options.headers || {})
-      },
-      ...options
+      }
     });
   }
 
@@ -111,6 +134,9 @@
     escapeHtml,
     getLoggedInUser,
     saveLoggedInUser,
+    saveAccessToken,
+    getAccessToken,
+    getAuthHeaders,
     clearLoggedInUser,
     requireLogin,
     redirectIfLoggedIn,
