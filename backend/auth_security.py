@@ -5,11 +5,25 @@ from typing import Optional
 from fastapi import Header
 from jose import JWTError, jwt
 
+try:
+    from backend.settings import (
+        ACCESS_TOKEN_EXPIRE_MINUTES,
+        JWT_SECRET_FROM_ENV,
+        JWT_SECRET_KEY,
+    )
+except ImportError:
+    from settings import (
+        ACCESS_TOKEN_EXPIRE_MINUTES,
+        JWT_SECRET_FROM_ENV,
+        JWT_SECRET_KEY,
+    )
 
-# 실제 서비스에서는 Render 환경변수 JWT_SECRET_KEY로 설정하는 것을 권장합니다.
-SECRET_KEY = "change-this-secret-key-before-production"
+if not JWT_SECRET_FROM_ENV:
+    # 개발 환경에서는 기본 키로 동작하게 두고, 배포에서는 환경변수 설정을 권장합니다.
+    pass
+
+SECRET_KEY = JWT_SECRET_KEY
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24시간
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:

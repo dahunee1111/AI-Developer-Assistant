@@ -2,12 +2,20 @@ from fastapi import APIRouter, Query
 from pydantic import BaseModel
 from datetime import datetime
 
-from db import (
-    get_conn,
-    user_exists,
-    get_total_points,
-    spend_points,
-)
+try:
+    from backend.db import (
+        get_conn,
+        user_exists,
+        get_total_points,
+        spend_points,
+    )
+except ImportError:
+    from db import (
+        get_conn,
+        user_exists,
+        get_total_points,
+        spend_points,
+    )
 
 router = APIRouter()
 

@@ -5,12 +5,20 @@ import json
 import requests
 from datetime import datetime
 
-from db import (
-    get_conn,
-    user_exists,
-    add_points,
-    get_total_points,
-)
+try:
+    from backend.db import (
+        get_conn,
+        user_exists,
+        add_points,
+        get_total_points,
+    )
+except ImportError:
+    from db import (
+        get_conn,
+        user_exists,
+        add_points,
+        get_total_points,
+    )
 
 router = APIRouter()
 

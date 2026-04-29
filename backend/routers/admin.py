@@ -4,7 +4,10 @@ from typing import Optional, List
 from datetime import datetime
 import json
 
-from db import get_conn
+try:
+    from backend.db import get_conn
+except ImportError:
+    from db import get_conn
 
 router = APIRouter()
 

@@ -4,12 +4,20 @@ from datetime import datetime, date
 import os
 import requests
 
-from db import (
-    get_conn,
-    user_exists,
-    add_points,
-    get_total_points,
-)
+try:
+    from backend.db import (
+        get_conn,
+        user_exists,
+        add_points,
+        get_total_points,
+    )
+except ImportError:
+    from db import (
+        get_conn,
+        user_exists,
+        add_points,
+        get_total_points,
+    )
 
 router = APIRouter()
 

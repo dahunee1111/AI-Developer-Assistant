@@ -2,14 +2,22 @@ from fastapi import APIRouter, Query
 from pydantic import BaseModel
 from datetime import datetime
 
-from db import (
-    get_conn,
-    ensure_profile_custom_row,
-    get_user_or_none,
-    hash_password,
-)
-
-from auth_security import create_access_token
+try:
+    from backend.db import (
+        get_conn,
+        ensure_profile_custom_row,
+        get_user_or_none,
+        hash_password,
+    )
+    from backend.auth_security import create_access_token
+except ImportError:
+    from db import (
+        get_conn,
+        ensure_profile_custom_row,
+        get_user_or_none,
+        hash_password,
+    )
+    from auth_security import create_access_token
 
 router = APIRouter()
 
