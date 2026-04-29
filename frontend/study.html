@@ -894,13 +894,27 @@
         const res = await fetch(`${API_BASE}/code-review`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ user_id: getUserId(), code })
+          body: JSON.stringify({
+            user_id: getUserId(),
+            code_text: code
+          })
         });
 
         const data = await res.json();
-        document.getElementById("result").innerText = data.result || "결과 없음";
+
+        if (!res.ok) {
+          console.error("코드 분석 API 오류:", data);
+          document.getElementById("result").innerText =
+            data.detail ? JSON.stringify(data.detail, null, 2) : "서버 오류가 발생했습니다.";
+          return;
+        }
+
+        document.getElementById("result").innerText =
+          data.result || data.analysis || data.review || data.message || "결과 없음";
+
         await loadCodeReviewHistory();
       } catch (e) {
+        console.error("코드 분석 요청 실패:", e);
         document.getElementById("result").innerText = "코드 분석 중 오류가 발생했습니다.";
       }
     }
