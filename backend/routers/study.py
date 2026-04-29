@@ -82,7 +82,7 @@ def call_huggingface(prompt: str) -> str:
                         "content": prompt,
                     },
                 ],
-                "max_tokens": 1200,
+                "max_tokens": 500,
                 "temperature": 0.2,
             },
             timeout=40,
@@ -137,7 +137,11 @@ def analyze_error(data: ErrorRequest):
 
     prompt = f"""다음 Python 에러를 한국어로 짧고 실용적으로 분석해줘.
 
-반드시 아래 형식으로 답변하고, 전체 답변은 너무 길지 않게 작성해줘.
+조건:
+- 전체 답변은 600자 이내
+- 불필요한 설명 금지
+- 핵심만 간단하게 작성
+- 반드시 아래 형식 유지
 
 1. 에러 원인
 2. 왜 발생했는지
@@ -176,15 +180,20 @@ def code_review(data: CodeRequest):
         conn.close()
         return {"message": "유효하지 않은 사용자입니다."}
 
-    prompt = f"""다음 Python 코드를 한국어로 짧고 실용적으로 리뷰해줘.
+    prompt = f"""다음 Python 코드를 한국어로 짧게 리뷰해줘.
 
-반드시 아래 형식으로 답변하고, 전체 답변은 너무 길지 않게 작성해줘.
+조건:
+- 전체 답변은 600자 이내
+- 수정 예시는 핵심 부분만 짧게
+- 긴 설명, docstring, 긴 타입 설명 금지
+- 반드시 아래 형식 유지
 
 1. 코드 목적
 2. 문제점
 3. 개선 포인트
 4. 수정 예시
 5. 학습 포인트
+
 
 코드:
 {data.code_text}
