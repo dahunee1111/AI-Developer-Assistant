@@ -74,7 +74,8 @@ def call_huggingface(prompt: str) -> str:
                             "너는 Python, FastAPI, AI 개발 학습을 돕는 한국어 튜터다. "
                             "답변은 반드시 한국어로 작성한다. "
                             "내부 추론 과정은 절대 출력하지 않는다. "
-                            "초보자도 이해할 수 있게 짧고 실용적으로 설명한다."
+                            "중간에 끊기지 않도록 완결된 답변을 작성한다. "
+                            "코드 예시는 필요한 만큼만 포함하고, 마지막 문장을 반드시 완성한다."
                         ),
                     },
                     {
@@ -82,10 +83,10 @@ def call_huggingface(prompt: str) -> str:
                         "content": prompt,
                     },
                 ],
-                "max_tokens": 500,
+                "max_tokens": 1800,
                 "temperature": 0.2,
             },
-            timeout=40,
+            timeout=60,
         )
 
         if res.status_code != 200:
@@ -105,7 +106,7 @@ def call_huggingface(prompt: str) -> str:
 
             return (
                 "Hugging Face 응답에 출력 가능한 content가 없습니다. "
-                "HF_MODEL 환경변수를 다른 Instruct 모델로 변경해보세요."
+                "HF_MODEL 환경변수를 다른 Chat 모델로 변경해보세요."
             )
 
         except (KeyError, IndexError, TypeError):
@@ -135,12 +136,12 @@ def analyze_error(data: ErrorRequest):
         conn.close()
         return {"message": "유효하지 않은 사용자입니다."}
 
-    prompt = f"""다음 Python 에러를 한국어로 짧고 실용적으로 분석해줘.
+    prompt = f"""다음 Python 에러를 한국어로 실용적으로 분석해줘.
 
 조건:
-- 전체 답변은 600자 이내
-- 불필요한 설명 금지
-- 핵심만 간단하게 작성
+- 답변은 중간에 끊기지 않게 완결해서 작성
+- 불필요한 장황한 설명 금지
+- 코드 예시는 필요한 핵심 부분만 포함
 - 반드시 아래 형식 유지
 
 1. 에러 원인
@@ -180,12 +181,12 @@ def code_review(data: CodeRequest):
         conn.close()
         return {"message": "유효하지 않은 사용자입니다."}
 
-    prompt = f"""다음 Python 코드를 한국어로 짧게 리뷰해줘.
+    prompt = f"""다음 Python 코드를 한국어로 실용적으로 리뷰해줘.
 
 조건:
-- 전체 답변은 600자 이내
-- 수정 예시는 핵심 부분만 짧게
-- 긴 설명, docstring, 긴 타입 설명 금지
+- 답변은 중간에 끊기지 않게 완결해서 작성
+- 수정 예시는 핵심 부분만 포함
+- 긴 docstring, 긴 타입 설명, 반복 설명 금지
 - 반드시 아래 형식 유지
 
 1. 코드 목적
@@ -193,7 +194,6 @@ def code_review(data: CodeRequest):
 3. 개선 포인트
 4. 수정 예시
 5. 학습 포인트
-
 
 코드:
 {data.code_text}

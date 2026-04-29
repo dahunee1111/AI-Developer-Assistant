@@ -415,12 +415,30 @@
 
     .result-box {
       min-height: 180px;
-      padding: 14px;
+      padding: 16px;
       border-radius: 14px;
       background: var(--card-bg);
       border: 1px solid var(--card-border);
       white-space: pre-wrap;
       word-break: break-word;
+      overflow: visible;
+      max-height: none;
+      line-height: 1.7;
+    }
+
+    .result-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    .copy-result-btn {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      box-shadow: none;
+      color: var(--text);
     }
 
     .chart-wrap {
@@ -653,6 +671,9 @@
     <div class="section-head">
       <h2>분석 결과</h2>
     </div>
+    <div class="result-actions">
+      <button class="copy-result-btn" onclick="copyResult()">결과 복사</button>
+    </div>
     <div id="result" class="result-box">아직 없음</div>
   </section>
 
@@ -728,6 +749,29 @@
       AppCommon.toggleTheme(() => {
         if (chartInstance) loadChart();
       });
+    }
+
+    async function copyResult() {
+      const result = document.getElementById("result");
+      const text = result?.innerText || "";
+
+      if (!text || text === "아직 없음" || text === "분석 중...") {
+        alert("복사할 결과가 없습니다.");
+        return;
+      }
+
+      try {
+        await navigator.clipboard.writeText(text);
+        alert("결과가 복사되었습니다.");
+      } catch (e) {
+        const temp = document.createElement("textarea");
+        temp.value = text;
+        document.body.appendChild(temp);
+        temp.select();
+        document.execCommand("copy");
+        document.body.removeChild(temp);
+        alert("결과가 복사되었습니다.");
+      }
     }
 
     function initPageBase() {
