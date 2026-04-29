@@ -52,7 +52,7 @@ def call_huggingface(prompt: str) -> str:
     hf_token = os.getenv("HF_TOKEN")
     hf_model = os.getenv(
         "HF_MODEL",
-        "mistralai/Mistral-7B-Instruct-v0.3:featherless-ai"
+        "openai/gpt-oss-20b:fireworks-ai"
     )
 
     if not hf_token:
