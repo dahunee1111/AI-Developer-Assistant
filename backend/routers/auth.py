@@ -8,6 +8,7 @@ try:
         ensure_profile_custom_row,
         get_user_or_none,
         hash_password,
+        verify_password,
     )
     from backend.auth_security import create_access_token
 except ImportError:
@@ -16,6 +17,7 @@ except ImportError:
         ensure_profile_custom_row,
         get_user_or_none,
         hash_password,
+        verify_password,
     )
     from auth_security import create_access_token
 
@@ -110,7 +112,8 @@ def login(data: LoginRequest):
     if not user:
         return {"message": "존재하지 않는 이메일입니다."}
 
-    if user["password"] != hash_password(password):
+    # ✅ bcrypt를 사용한 안전한 비밀번호 검증
+    if not verify_password(password, user["password"]):
         return {"message": "비밀번호가 올바르지 않습니다."}
 
     ensure_profile_custom_row(user["id"])
