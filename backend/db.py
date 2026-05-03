@@ -1,6 +1,6 @@
 import sqlite3
 import json
-import hashlib
+import bcrypt
 from datetime import datetime
 
 try:
@@ -26,7 +26,35 @@ def ensure_column_exists(cursor, table_name: str, column_name: str, alter_sql: s
 
 
 def hash_password(password: str) -> str:
-    return hashlib.sha256(password.encode("utf-8")).hexdigest()
+    """
+    bcrypt를 사용하여 비밀번호를 안전하게 해시합니다.
+    
+    Args:
+        password: 평문 비밀번호
+        
+    Returns:
+        해시된 비밀번호 (str)
+    """
+    salt = bcrypt.gensalt(rounds=12)
+    hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
+    return hashed.decode('utf-8')
+
+
+def verify_password(password: str, hashed_password: str) -> bool:
+    """
+    bcrypt를 사용하여 비밀번호를 검증합니다.
+    
+    Args:
+        password: 평문 비밀번호
+        hashed_password: 저장된 해시 비밀번호
+        
+    Returns:
+        일치하면 True, 아니면 False
+    """
+    try:
+        return bcrypt.checkpw(password.encode('utf-8'), hashed_password.encode('utf-8'))
+    except (ValueError, TypeError):
+        return False
 
 
 def user_exists(cursor, user_id: int) -> bool:
@@ -391,10 +419,10 @@ def seed_exam_data():
             "question_type": "code",
             "question_text": "nums 리스트의 모든 원소의 합을 반환하는 solution 함수를 완성하세요.",
             "starter_code": """def solution(nums):
-    total = 0
-    # nums의 합을 반환하세요
-    return total
-""",
+     total = 0
+     # nums의 합을 반환하세요
+     return total
+ """,
             "test_cases": [
                 {"input": [1, 2, 3], "output": 6},
                 {"input": [10, 20], "output": 30},
@@ -406,10 +434,10 @@ def seed_exam_data():
             "question_type": "code",
             "question_text": "nums 리스트에서 짝수의 개수를 반환하는 solution 함수를 작성하세요.",
             "starter_code": """def solution(nums):
-    count = 0
-    # 짝수의 개수를 세세요
-    return count
-""",
+     count = 0
+     # 짝수의 개수를 세세요
+     return count
+ """,
             "test_cases": [
                 {"input": [1, 2, 3, 4], "output": 2},
                 {"input": [2, 2, 2], "output": 3},
@@ -456,10 +484,10 @@ def seed_exam_data():
             "question_type": "code",
             "question_text": "문자열 리스트 words에서 길이가 3 이상인 단어만 반환하는 solution 함수를 작성하세요.",
             "starter_code": """def solution(words):
-    result = []
-    # 길이가 3 이상인 단어만 result에 넣으세요
-    return result
-""",
+     result = []
+     # 길이가 3 이상인 단어만 result에 넣으세요
+     return result
+ """,
             "test_cases": [
                 {"input": ["hi", "cat", "python"], "output": ["cat", "python"]},
                 {"input": ["a", "be"], "output": []},
@@ -471,10 +499,10 @@ def seed_exam_data():
             "question_type": "code",
             "question_text": "nums 리스트에서 10 이상인 숫자만 반환하는 solution 함수를 작성하세요.",
             "starter_code": """def solution(nums):
-    result = []
-    # 10 이상인 숫자만 result에 넣으세요
-    return result
-""",
+     result = []
+     # 10 이상인 숫자만 result에 넣으세요
+     return result
+ """,
             "test_cases": [
                 {"input": [1, 10, 15, 3], "output": [10, 15]},
                 {"input": [9, 8, 7], "output": []},
@@ -521,10 +549,10 @@ def seed_exam_data():
             "question_type": "code",
             "question_text": "문자열 s에서 모음(a,e,i,o,u)의 개수를 반환하는 solution 함수를 작성하세요.",
             "starter_code": """def solution(s):
-    count = 0
-    # 모음 개수를 세세요
-    return count
-""",
+     count = 0
+     # 모음 개수를 세세요
+     return count
+ """,
             "test_cases": [
                 {"input": "apple", "output": 2},
                 {"input": "sky", "output": 0},
@@ -536,9 +564,9 @@ def seed_exam_data():
             "question_type": "code",
             "question_text": "nums 리스트에서 가장 큰 값을 반환하는 solution 함수를 작성하세요. 빈 리스트면 0을 반환하세요.",
             "starter_code": """def solution(nums):
-    # 가장 큰 값을 반환하세요
-    return 0
-""",
+     # 가장 큰 값을 반환하세요
+     return 0
+ """,
             "test_cases": [
                 {"input": [1, 9, 3], "output": 9},
                 {"input": [], "output": 0},
@@ -609,7 +637,7 @@ def seed_shop_items():
 
         {"item_key": "card_skin_glass_strong", "item_name": "글래스 스트롱 카드 스킨", "item_type": "card_skin", "price": 150, "description": "더 진한 유리 느낌 카드 스킨", "style_value": "glass_strong"},
         {"item_key": "card_skin_soft_light", "item_name": "소프트 라이트 카드 스킨", "item_type": "card_skin", "price": 150, "description": "조금 더 밝고 부드러운 카드 스킨", "style_value": "soft_light"},
-        {"item_key": "card_skin_outline_neon", "item_name": "네온 아웃라인 카드 스킨", "item_type": "card_skin", "price": 180, "description": "외곽선이 강조되는 카드 스킨", "style_value": "outline_neon"}
+        {"item_key": "card_skin_outline_neon", "item_name": "네온 아웃라인 카드 스킨", "item_type": "card_skin", "price": 180, "description": "외곽선이 강조되는 카드 스킨", "style_value": "outline_neon"},
     ]
 
     for item in items:
