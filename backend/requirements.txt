@@ -15,7 +15,6 @@ passlib==1.7.4
 
 # HTTP & Network
 httpx==0.25.1
-httpcore==1.1.0
 requests==2.31.0
 python-multipart==0.0.6
 
