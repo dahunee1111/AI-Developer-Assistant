@@ -1,12 +1,12 @@
 # Core Framework
-fastapi==0.104.1
+fastapi==0.115.0
 uvicorn[standard]==0.24.0
 
 # Database
 SQLAlchemy==2.0.23
 
 # Data Validation
-pydantic==2.5.0
+pydantic==2.11.7
 
 # Authentication & Security
 python-jose[cryptography]==3.3.0
