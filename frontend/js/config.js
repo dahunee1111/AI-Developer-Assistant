@@ -1,6 +1,6 @@
 (function () {
   const LOCAL_API = "http://127.0.0.1:8000";
-  API_BASE: http://52.63.38.2:8000;
+  const API_BASE: http://52.63.38.2:8000;
 
   const hostname = window.location.hostname;
 
