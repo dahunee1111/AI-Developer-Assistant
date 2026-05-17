@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="AI chatbot avatar">
+  <defs>
+    <linearGradient id="bg" x1="20" y1="12" x2="112" y2="120" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8CF7FF"/>
+      <stop offset="0.52" stop-color="#7C6BFF"/>
+      <stop offset="1" stop-color="#E560FF"/>
+    </linearGradient>
+    <linearGradient id="face" x1="33" y1="34" x2="96" y2="98" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#DDE8FF"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="8" stdDeviation="7" flood-color="#17234B" flood-opacity="0.38"/>
+    </filter>
+  </defs>
+
+  <circle cx="64" cy="64" r="58" fill="url(#bg)"/>
+  <circle cx="34" cy="28" r="12" fill="#FFFFFF" opacity="0.28"/>
+  <circle cx="96" cy="102" r="18" fill="#FFFFFF" opacity="0.16"/>
+
+  <g filter="url(#shadow)">
+    <rect x="30" y="39" width="68" height="58" rx="22" fill="url(#face)"/>
+    <path d="M44 39c3-13 15-22 29-22 4 0 7 3 7 7 0 2-1 4-2 5-3 3-4 6-4 10H44z" fill="#FFFFFF" opacity="0.9"/>
+    <rect x="23" y="55" width="13" height="25" rx="7" fill="#DDE8FF"/>
+    <rect x="92" y="55" width="13" height="25" rx="7" fill="#DDE8FF"/>
+    <circle cx="50" cy="65" r="7" fill="#18264A"/>
+    <circle cx="78" cy="65" r="7" fill="#18264A"/>
+    <circle cx="52" cy="63" r="2.5" fill="#8CF7FF"/>
+    <circle cx="80" cy="63" r="2.5" fill="#8CF7FF"/>
+    <path d="M52 80c6 6 18 6 24 0" fill="none" stroke="#18264A" stroke-width="5" stroke-linecap="round"/>
+    <path d="M64 30v-9" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="64" cy="18" r="7" fill="#FFFFFF"/>
+  </g>
+
+  <path d="M90 89c10 0 18 7 18 16 0 3-1 7-3 9l3 10-10-5c-3 1-5 2-8 2-10 0-18-7-18-16s8-16 18-16z" fill="#14203B" opacity="0.95"/>
+  <circle cx="84" cy="105" r="3" fill="#8CF7FF"/>
+  <circle cx="93" cy="105" r="3" fill="#B9A7FF"/>
+  <circle cx="102" cy="105" r="3" fill="#E560FF"/>
+</svg>

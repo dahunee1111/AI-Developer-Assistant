@@ -8,6 +8,7 @@ try:
     from backend.routers.shop import router as shop_router
     from backend.routers.profile import router as profile_router
     from backend.routers.admin import router as admin_router
+    from backend.routers.chat import router as chat_router
     from backend.db import init_db, seed_exam_data, seed_shop_items
     from backend.settings import CORS_ALLOW_ORIGINS
 except ImportError:
@@ -17,6 +18,7 @@ except ImportError:
     from routers.shop import router as shop_router
     from routers.profile import router as profile_router
     from routers.admin import router as admin_router
+    from routers.chat import router as chat_router
     from db import init_db, seed_exam_data, seed_shop_items
     from settings import CORS_ALLOW_ORIGINS
 
@@ -43,6 +45,7 @@ app.include_router(exam_router)
 app.include_router(shop_router)
 app.include_router(profile_router)
 app.include_router(admin_router)
+app.include_router(chat_router)
 
 @app.get("/")
 def root():

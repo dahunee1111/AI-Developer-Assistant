@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 챗봇 | AI Developer Assistant</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --panel: rgba(17, 24, 39, 0.84);
+      --line: rgba(255, 255, 255, 0.08);
+      --text: #eef4ff;
+      --muted: #a7b4c8;
+      --primary: #3b82f6;
+      --primary-2: #22d3ee;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --shadow: 0 18px 45px rgba(0, 0, 0, 0.28);
+      --radius: 22px;
+      --card-bg: rgba(255,255,255,0.04);
+      --card-border: rgba(255,255,255,0.08);
+    }
+
+    html[data-theme="light"] {
+      --bg: #eef4ff;
+      --panel: rgba(255, 255, 255, 0.94);
+      --line: rgba(15, 23, 42, 0.08);
+      --text: #0f172a;
+      --muted: #475569;
+      --primary: #2563eb;
+      --primary-2: #06b6d4;
+      --success: #16a34a;
+      --danger: #dc2626;
+      --warning: #d97706;
+      --shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+      --card-bg: rgba(15,23,42,0.03);
+      --card-border: rgba(15,23,42,0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: "Segoe UI", Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(59,130,246,0.14), transparent 26%),
+        radial-gradient(circle at top right, rgba(34,211,238,0.12), transparent 24%),
+        linear-gradient(180deg, var(--bg) 0%, var(--bg) 100%);
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 24px 18px 42px;
+      line-height: 1.6;
+    }
+
+    .glass {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      backdrop-filter: blur(16px);
+      box-shadow: var(--shadow);
+      border-radius: var(--radius);
+    }
+
+    .hero {
+      padding: 26px;
+      margin-bottom: 16px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 18% 20%, rgba(96,165,250,0.16), transparent 22%),
+        radial-gradient(circle at 82% 24%, rgba(34,211,238,0.12), transparent 18%);
+      pointer-events: none;
+    }
+
+    .hero > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .user-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 9px 13px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.06);
+      font-size: 0.88rem;
+      font-weight: 700;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+      font-size: 0.86rem;
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      font-size: clamp(2rem, 5vw, 3.1rem);
+      letter-spacing: -0.04em;
+      line-height: 1.08;
+      margin-bottom: 10px;
+    }
+
+    h1 span {
+      background: linear-gradient(135deg, #7dd3fc, #93c5fd, #67e8f9);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero p {
+      color: var(--muted);
+      max-width: 760px;
+      font-size: 0.98rem;
+    }
+
+    .chat-layout {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .chat-card,
+    .side-card {
+      padding: 18px;
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .section-head h2 {
+      font-size: 1.1rem;
+    }
+
+    .section-sub {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-bottom: 12px;
+    }
+
+    .chat-messages {
+      height: 560px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 14px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.035);
+      border: 1px solid var(--card-border);
+      margin-bottom: 12px;
+    }
+
+    .message-row {
+      display: flex;
+      width: 100%;
+    }
+
+    .message-row.user {
+      justify-content: flex-end;
+    }
+
+    .message-row.assistant {
+      justify-content: flex-start;
+    }
+
+    .bubble {
+      max-width: min(78%, 720px);
+      padding: 12px 14px;
+      border-radius: 18px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      border: 1px solid var(--card-border);
+      font-size: 0.95rem;
+    }
+
+    .message-row.user .bubble {
+      background: linear-gradient(135deg, rgba(59,130,246,0.94), rgba(34,211,238,0.82));
+      color: white;
+      border-bottom-right-radius: 6px;
+    }
+
+    .message-row.assistant .bubble {
+      background: var(--card-bg);
+      color: var(--text);
+      border-bottom-left-radius: 6px;
+    }
+
+    .bubble-meta {
+      display: block;
+      margin-top: 8px;
+      color: rgba(255,255,255,0.68);
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .message-row.assistant .bubble-meta {
+      color: var(--muted);
+    }
+
+    .input-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: end;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 72px;
+      max-height: 180px;
+      resize: vertical;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: var(--card-bg);
+      color: var(--text);
+      padding: 12px 14px;
+      outline: none;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    textarea::placeholder {
+      color: var(--muted);
+    }
+
+    textarea:focus {
+      border-color: rgba(96,165,250,0.62);
+      box-shadow: 0 0 0 4px rgba(59,130,246,0.12);
+    }
+
+    button {
+      border: none;
+      cursor: pointer;
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-weight: 800;
+      color: white;
+      background: linear-gradient(135deg, var(--primary), var(--primary-2));
+      transition: transform 0.2s ease, opacity 0.2s ease;
+      box-shadow: 0 10px 24px rgba(59,130,246,0.18);
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      opacity: 0.96;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+      transform: none;
+    }
+
+    .ghost-btn {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      box-shadow: none;
+      color: var(--text);
+    }
+
+    .danger-btn {
+      background: linear-gradient(135deg, #dc2626, #ef4444);
+      box-shadow: 0 10px 24px rgba(239,68,68,0.18);
+    }
+
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .quick-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .quick-btn {
+      text-align: left;
+      width: 100%;
+      box-shadow: none;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text);
+      font-size: 0.9rem;
+    }
+
+    .info-box {
+      margin-top: 12px;
+      padding: 13px;
+      border-radius: 16px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      color: var(--muted);
+      font-size: 0.9rem;
+      white-space: pre-wrap;
+    }
+
+    .status-line {
+      color: var(--muted);
+      font-size: 0.84rem;
+      margin-top: 8px;
+      min-height: 22px;
+    }
+
+    .empty-state {
+      padding: 18px;
+      border-radius: 16px;
+      background: var(--card-bg);
+      border: 1px dashed var(--card-border);
+      color: var(--muted);
+      text-align: center;
+    }
+
+    @media (max-width: 980px) {
+      .chat-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .chat-messages {
+        height: 520px;
+      }
+    }
+
+    @media (max-width: 560px) {
+      body {
+        padding: 14px 10px 34px;
+      }
+
+      .hero,
+      .chat-card,
+      .side-card {
+        padding: 16px;
+      }
+
+      .input-row {
+        grid-template-columns: 1fr;
+      }
+
+      .bubble {
+        max-width: 92%;
+      }
+    }
+  </style>
+</head>
+<body data-disable-floating-chat="true">
+  <section class="hero glass">
+    <div class="topbar">
+      <div id="userChip" class="user-chip">사용자 확인 중...</div>
+      <div class="top-actions">
+        <button class="ghost-btn" onclick="location.href='index.html'">대시보드</button>
+        <button class="ghost-btn" onclick="location.href='study.html'">학습</button>
+        <button class="ghost-btn" onclick="toggleTheme()">☀️ / 🌙</button>
+        <button class="ghost-btn" onclick="logout()">로그아웃</button>
+      </div>
+    </div>
+
+    <div class="badge">🤖 AI Chatbot</div>
+    <h1>
+      프로젝트와 개발 학습을 돕는<br>
+      <span>AI 챗봇</span>
+    </h1>
+    <p>
+      Python, FastAPI, 배포 오류, 프로젝트 기능 설명, 학습 방향을 자유롭게 질문할 수 있습니다.
+      Hugging Face 연결이 실패해도 기본 프로젝트 안내 답변으로 안전하게 동작합니다.
+    </p>
+  </section>
+
+  <section class="chat-layout">
+    <main class="chat-card glass">
+      <div class="section-head">
+        <h2>대화</h2>
+        <div class="btn-row">
+          <button class="ghost-btn" onclick="loadChatHistory()">새로고침</button>
+          <button class="danger-btn" onclick="clearChatHistory()">기록 삭제</button>
+        </div>
+      </div>
+      <div class="section-sub">질문을 입력하면 백엔드 /chat API를 통해 답변을 받아옵니다.</div>
+
+      <div id="chatMessages" class="chat-messages"></div>
+
+      <div class="input-row">
+        <textarea id="messageInput" placeholder="예: 이 프로젝트 기술 스택 설명해줘\n예: FastAPI CORS 오류가 뭔지 알려줘"></textarea>
+        <button id="sendBtn" onclick="sendMessage()">전송</button>
+      </div>
+      <div id="statusLine" class="status-line"></div>
+    </main>
+
+    <aside class="side-card glass">
+      <div class="section-head">
+        <h2>빠른 질문</h2>
+      </div>
+      <div class="section-sub">버튼을 누르면 입력창에 바로 들어갑니다.</div>
+
+      <div class="quick-list">
+        <button class="quick-btn" onclick="setQuickQuestion('이 프로젝트는 어떤 서비스야?')">이 프로젝트는 어떤 서비스야?</button>
+        <button class="quick-btn" onclick="setQuickQuestion('사용한 기술 스택을 설명해줘')">사용한 기술 스택을 설명해줘</button>
+        <button class="quick-btn" onclick="setQuickQuestion('출석과 포인트 기능은 어떻게 동작해?')">출석과 포인트 기능 설명</button>
+        <button class="quick-btn" onclick="setQuickQuestion('시험 시스템과 오답노트 기능을 설명해줘')">시험/오답노트 설명</button>
+        <button class="quick-btn" onclick="setQuickQuestion('FastAPI와 프론트엔드는 어떻게 연결돼?')">FastAPI 연결 구조</button>
+        <button class="quick-btn" onclick="setQuickQuestion('EC2 배포에서 확인해야 할 것을 알려줘')">EC2 배포 체크</button>
+      </div>
+
+      <div class="info-box">
+추천 사용법
+
+1. 프로젝트 설명 질문
+2. 코드/에러 질문
+3. 배포 오류 질문
+4. 발표용 설명 정리
+
+AI 응답이 안 나오면 EC2 환경변수 HF_TOKEN을 확인하세요.
+      </div>
+    </aside>
+  </section>
+
+  <script src="js/config.js"></script>
+  <script src="js/common.js"></script>
+  <script>
+    const API_BASE = AppCommon.getApiBase();
+    const escapeHtml = AppCommon.escapeHtml;
+
+    let currentUser = null;
+    let isSending = false;
+
+    function getUserId() {
+      return currentUser?.id ?? null;
+    }
+
+    function logout() {
+      AppCommon.logout();
+    }
+
+    function toggleTheme() {
+      AppCommon.toggleTheme();
+    }
+
+    function setStatus(message) {
+      document.getElementById("statusLine").innerText = message || "";
+    }
+
+    function scrollToBottom() {
+      const box = document.getElementById("chatMessages");
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function formatMessage(message) {
+      return escapeHtml(message).replaceAll("\n", "<br>");
+    }
+
+    function renderMessage(role, message, createdAt = "") {
+      const list = document.getElementById("chatMessages");
+      const row = document.createElement("div");
+      row.className = `message-row ${role === "user" ? "user" : "assistant"}`;
+
+      const label = role === "user" ? "나" : "AI 챗봇";
+      const safeDate = createdAt ? escapeHtml(createdAt) : "방금";
+
+      row.innerHTML = `
+        <div class="bubble">
+          ${formatMessage(message)}
+          <span class="bubble-meta">${label} · ${safeDate}</span>
+        </div>
+      `;
+
+      list.appendChild(row);
+      scrollToBottom();
+    }
+
+    function renderEmptyState() {
+      const list = document.getElementById("chatMessages");
+      list.innerHTML = `
+        <div class="empty-state">
+          아직 대화 기록이 없습니다.<br>
+          프로젝트 설명, 코드 오류, 배포 문제를 자유롭게 질문해보세요.
+        </div>
+      `;
+    }
+
+    function clearEmptyStateIfNeeded() {
+      const empty = document.querySelector(".empty-state");
+      if (empty) empty.remove();
+    }
+
+    function setQuickQuestion(question) {
+      const input = document.getElementById("messageInput");
+      input.value = question;
+      input.focus();
+    }
+
+    async function loadChatHistory() {
+      const list = document.getElementById("chatMessages");
+      list.innerHTML = "";
+      setStatus("대화 기록을 불러오는 중...");
+
+      try {
+        const res = await AppCommon.jsonFetch(`${API_BASE}/chat/history?user_id=${getUserId()}`);
+        const data = await res.json();
+
+        if (!res.ok) {
+          renderEmptyState();
+          setStatus(data.detail || data.message || "대화 기록을 불러오지 못했습니다.");
+          return;
+        }
+
+        const history = data.history || [];
+        if (history.length === 0) {
+          renderEmptyState();
+        } else {
+          history.forEach(item => renderMessage(item.role, item.message, item.created_at));
+        }
+
+        setStatus("");
+      } catch (e) {
+        console.error("채팅 기록 로드 실패:", e);
+        renderEmptyState();
+        setStatus("대화 기록을 불러오는 중 오류가 발생했습니다.");
+      }
+    }
+
+    async function sendMessage() {
+      if (isSending) return;
+
+      const input = document.getElementById("messageInput");
+      const sendBtn = document.getElementById("sendBtn");
+      const message = input.value.trim();
+
+      if (!message) {
+        setStatus("메시지를 입력해주세요.");
+        input.focus();
+        return;
+      }
+
+      clearEmptyStateIfNeeded();
+      renderMessage("user", message);
+      input.value = "";
+      input.focus();
+
+      isSending = true;
+      sendBtn.disabled = true;
+      sendBtn.innerText = "응답 중...";
+      setStatus("AI 챗봇이 답변을 생성하는 중입니다...");
+
+      try {
+        const res = await AppCommon.jsonFetch(`${API_BASE}/chat`, {
+          method: "POST",
+          body: JSON.stringify({
+            user_id: getUserId(),
+            message
+          })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          renderMessage("assistant", data.detail || data.message || "챗봇 응답 중 서버 오류가 발생했습니다.");
+          setStatus("요청 실패");
+          return;
+        }
+
+        renderMessage("assistant", data.reply || "응답이 비어 있습니다.");
+        setStatus(data.source === "huggingface" ? "Hugging Face 응답 완료" : "기본 답변으로 응답했습니다.");
+      } catch (e) {
+        console.error("챗봇 요청 실패:", e);
+        renderMessage("assistant", "챗봇 요청 중 오류가 발생했습니다. API_BASE와 백엔드 서버 상태를 확인해주세요.");
+        setStatus("요청 중 오류 발생");
+      } finally {
+        isSending = false;
+        sendBtn.disabled = false;
+        sendBtn.innerText = "전송";
+      }
+    }
+
+    async function clearChatHistory() {
+      if (!confirm("챗봇 대화 기록을 삭제하시겠습니까?")) return;
+
+      setStatus("대화 기록을 삭제하는 중...");
+
+      try {
+        const res = await AppCommon.jsonFetch(`${API_BASE}/chat/history?user_id=${getUserId()}`, {
+          method: "DELETE"
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          setStatus(data.detail || data.message || "기록 삭제에 실패했습니다.");
+          return;
+        }
+
+        renderEmptyState();
+        setStatus(data.message || "대화 기록을 삭제했습니다.");
+      } catch (e) {
+        console.error("채팅 기록 삭제 실패:", e);
+        setStatus("대화 기록 삭제 중 오류가 발생했습니다.");
+      }
+    }
+
+    document.getElementById("messageInput").addEventListener("keydown", function (e) {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    function initPage() {
+      AppCommon.initTheme();
+      currentUser = AppCommon.requireLogin();
+      if (!currentUser) return;
+
+      AppCommon.updateUserChip(currentUser);
+      loadChatHistory();
+    }
+
+    initPage();
+  </script>
+</body>
+</html>
