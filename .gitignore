@@ -6,7 +6,10 @@ __pycache__/
 # env
 .env
 
+# Database / backups
+backend/history.db
+db_backups/
+
 # OS
 .DS_Store
 Thumbs.db
-backend/history.db

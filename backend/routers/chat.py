@@ -1,16 +1,14 @@
-from fastapi import APIRouter, Query, Depends, HTTPException, status
+from fastapi import APIRouter, Query
 from pydantic import BaseModel
 from datetime import datetime
-from typing import Optional, List, Dict
+from typing import Optional, List
 import os
 import requests
 
 try:
     from backend.db import get_conn, user_exists
-    from backend.auth_security import get_current_user_id_from_header, is_same_user
 except ImportError:
     from db import get_conn, user_exists
-    from auth_security import get_current_user_id_from_header, is_same_user
 
 
 router = APIRouter()
@@ -21,165 +19,217 @@ class ChatRequest(BaseModel):
     message: str
 
 
-class ChatClearRequest(BaseModel):
-    user_id: int
-
-
-MAX_USER_MESSAGE_LENGTH = 4000
-MAX_CONTEXT_MESSAGES = 8
-
-
-PROJECT_CONTEXT = """
-프로젝트명: AI Developer Assistant
-목적: 개발 학습자를 위한 AI 기반 학습 대시보드
-주요 기능: 에러 분석, 코드 리뷰, 학습 기록일기 CRUD, 출석 체크, 포인트 시스템, 상점/인벤토리, 프로필 꾸미기, 시험 시스템, 오답노트, 난이도 추천
-백엔드: Python, FastAPI, SQLite, JWT 인증, bcrypt 비밀번호 해싱, Rate Limiting
-프론트엔드: HTML, CSS, JavaScript, GitHub Pages
-배포/연결: 프론트엔드는 GitHub Pages, 백엔드는 EC2 + DuckDNS HTTPS 도메인 API와 연결
-AI 연결: Hugging Face Inference Providers 기반 응답을 우선 사용하고, 실패 시 기본 답변을 제공
-""".strip()
-
-
-SYSTEM_PROMPT = f"""
-너는 'AI Developer Assistant' 프로젝트 안에 들어가는 한국어 AI 챗봇이다.
-사용자는 개발을 배우는 학습자이며, Python/FastAPI/HTML/CSS/JS/SQL/배포 오류를 자주 질문한다.
-
-규칙:
-- 반드시 한국어로 답변한다.
-- 내부 추론 과정은 절대 출력하지 않는다.
-- 너무 장황하게 늘이지 말고, 바로 실행 가능한 설명을 준다.
-- 코드가 필요하면 핵심 코드만 보여준다.
-- 사용자가 프로젝트 기능을 물어보면 아래 프로젝트 정보를 기준으로 설명한다.
-- 확실하지 않은 내용은 추측하지 말고 확인해야 할 파일/위치를 말한다.
-
-프로젝트 정보:
-{PROJECT_CONTEXT}
-""".strip()
-
-
 def now_str() -> str:
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
-def _validate_user(cursor, request_user_id: int, token_user_id: Optional[int]):
-    if not is_same_user(request_user_id, token_user_id):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="다른 사용자의 챗봇 기록에는 접근할 수 없습니다.",
-        )
-
-    if not user_exists(cursor, request_user_id):
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="사용자를 찾을 수 없습니다.",
-        )
-
-
-def save_chat_message(user_id: int, role: str, message: str):
+def ensure_chat_history_table():
     conn = get_conn()
     cursor = conn.cursor()
+
     cursor.execute("""
-        INSERT INTO chat_history (user_id, role, message, created_at)
-        VALUES (?, ?, ?, ?)
-    """, (user_id, role, message, now_str()))
+        CREATE TABLE IF NOT EXISTS chat_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            role TEXT NOT NULL,
+            message TEXT NOT NULL,
+            created_at TEXT NOT NULL
+        )
+    """)
+
     conn.commit()
     conn.close()
 
 
-def load_recent_messages(user_id: int) -> List[Dict[str, str]]:
+def save_chat_message(user_id: int, role: str, message: str):
+    ensure_chat_history_table()
+
     conn = get_conn()
     cursor = conn.cursor()
+
     cursor.execute("""
-        SELECT role, message
+        INSERT INTO chat_history (user_id, role, message, created_at)
+        VALUES (?, ?, ?, ?)
+    """, (user_id, role, message, now_str()))
+
+    conn.commit()
+    conn.close()
+
+
+def get_recent_chat_messages(user_id: int, limit: int = 10) -> List[dict]:
+    ensure_chat_history_table()
+
+    conn = get_conn()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT id, user_id, role, message, created_at
         FROM chat_history
         WHERE user_id = ?
         ORDER BY id DESC
         LIMIT ?
-    """, (user_id, MAX_CONTEXT_MESSAGES))
+    """, (user_id, limit))
+
     rows = cursor.fetchall()
     conn.close()
 
-    # DB에서는 최신순으로 가져오고, AI에게는 오래된 순서로 전달
-    rows = list(reversed(rows))
-    return [
-        {
-            "role": row["role"],
-            "content": row["message"],
-        }
-        for row in rows
-        if row["role"] in ["user", "assistant"]
+    return [dict(row) for row in reversed(rows)]
+
+
+def normalize_text(text: str) -> str:
+    return text.replace(" ", "").replace("\n", "").lower()
+
+
+def is_owner_question(message: str) -> bool:
+    text = normalize_text(message)
+
+    owner_keywords = [
+        "이사이트를만든개발자가누구",
+        "사이트를만든개발자가누구",
+        "이사이트만든개발자",
+        "사이트만든개발자",
+        "이사이트누가만들",
+        "사이트누가만들",
+        "누가만들",
+        "누가개발",
+        "누가제작",
+        "개발자가누구",
+        "제작자가누구",
+        "만든사람",
+        "만든개발자",
+        "전다훈",
+        "dahun",
+        "dahunjeon",
     ]
 
+    return any(keyword in text for keyword in owner_keywords)
 
-def fallback_reply(message: str) -> str:
-    text = message.lower().strip()
 
-    if any(keyword in text for keyword in ["프로젝트", "소개", "뭐야", "무슨 서비스", "개요"]):
+def owner_reply() -> str:
+    return "이 사이트를 만든 개발자는 전다훈 개발자님입니다."
+
+
+def project_fallback_reply(user_message: str) -> str:
+    text = user_message.strip().lower()
+
+    if is_owner_question(user_message):
+        return owner_reply()
+
+    if "프로젝트" in text or "설명" in text or "뭐야" in text:
         return (
-            "AI Developer Assistant는 개발 학습을 돕는 개인 프로젝트입니다.\n\n"
-            "핵심 흐름은 사용자가 에러나 코드를 입력하면 AI가 분석하고, "
-            "학습 기록·시험·오답노트·출석·포인트·상점 시스템으로 학습 성장을 이어가게 만드는 구조입니다.\n\n"
-            "즉, 단순 챗봇이 아니라 개발 학습 과정을 기록하고 보상하는 학습 대시보드입니다."
+            "AI Developer Assistant는 전다훈 개발자님이 만든 AI 기반 개발 학습 도우미 프로젝트입니다.\n\n"
+            "주요 기능은 다음과 같습니다.\n"
+            "1. Python/FastAPI 오류 분석\n"
+            "2. 코드 리뷰 및 개선 방향 제안\n"
+            "3. 학습 기록 저장\n"
+            "4. 출석 체크와 포인트 시스템\n"
+            "5. 시험 응시, 오답노트, 성장 기록 관리\n"
+            "6. 상점과 프로필 커스터마이징\n"
+            "7. AI 챗봇 도우미 기능\n\n"
+            "프론트엔드는 GitHub Pages, 백엔드는 EC2 Docker 기반 FastAPI 서버로 연결되어 있습니다."
         )
 
-    if any(keyword in text for keyword in ["기술", "스택", "fastapi", "sqlite", "배포"]):
+    if "기술" in text or "스택" in text or "사용한" in text:
         return (
             "이 프로젝트의 주요 기술 스택은 다음과 같습니다.\n\n"
-            "- Backend: Python, FastAPI, SQLite\n"
-            "- Auth: JWT, bcrypt 비밀번호 해싱\n"
             "- Frontend: HTML, CSS, JavaScript\n"
-            "- AI: Hugging Face Inference Providers 연동\n"
-            "- Deploy: GitHub Pages + EC2/DuckDNS API 서버 구조\n\n"
-            "프론트엔드는 정적 페이지로 동작하고, 백엔드는 API 서버로 로그인·학습·시험·상점·챗봇 요청을 처리합니다."
+            "- Backend: Python, FastAPI\n"
+            "- Database: SQLite\n"
+            "- Auth: JWT, bcrypt\n"
+            "- AI API: Hugging Face Inference API\n"
+            "- Deploy: GitHub Pages + EC2 + Docker + DuckDNS HTTPS 도메인\n\n"
+            "전체 구조는 프론트엔드 화면이 백엔드 API를 호출하고, 백엔드가 DB와 AI API를 연결하는 방식입니다."
         )
 
-    if any(keyword in text for keyword in ["포인트", "상점", "아이템", "인벤토리"]):
+    if "ec2" in text or "배포" in text or "서버" in text:
         return (
-            "포인트/상점 기능은 학습 행동을 보상으로 연결하는 기능입니다.\n\n"
-            "출석, 에러 분석, 코드 리뷰, 기록 작성, 시험 제출 같은 활동으로 포인트를 얻고, "
-            "그 포인트로 테마·배지·배경·닉네임 컬러·카드 스킨 같은 꾸미기 아이템을 구매하고 적용할 수 있습니다."
+            "현재 프로젝트는 EC2에서 Docker 컨테이너로 FastAPI 백엔드를 실행하는 구조입니다.\n\n"
+            "기본 흐름은 다음과 같습니다.\n"
+            "1. GitHub Pages에서 프론트엔드 화면 제공\n"
+            "2. 프론트엔드가 https://dahun-ai.duckdns.org API 호출\n"
+            "3. DuckDNS/HTTPS 도메인이 EC2 백엔드로 연결\n"
+            "4. EC2의 Docker 컨테이너에서 FastAPI 실행\n"
+            "5. SQLite DB는 backend/history.db를 컨테이너의 /app/history.db로 마운트해서 유지\n\n"
+            "컨테이너 이름은 ai-backend이고, 8000번 포트로 실행됩니다."
         )
 
-    if any(keyword in text for keyword in ["출석", "학습일", "체크"]):
+    if "오류" in text or "에러" in text or "해결" in text:
         return (
-            "출석 기능은 하루에 한 번 출석 기록을 저장하고 포인트를 지급하는 기능입니다.\n\n"
-            "백엔드는 attendance_records 테이블에 오늘 날짜를 저장하고, 이미 출석한 날이면 중복 지급을 막는 방식으로 동작합니다."
-        )
-
-    if any(keyword in text for keyword in ["시험", "오답", "난이도", "문제"]):
-        return (
-            "시험 시스템은 객관식 문제와 코드 문제를 풀고 결과를 저장하는 기능입니다.\n\n"
-            "틀린 문제는 오답노트에 저장되고, 최근 오답 흐름을 기준으로 easy/medium/hard 난이도를 추천할 수 있습니다."
-        )
-
-    if any(keyword in text for keyword in ["에러", "오류", "코드리뷰", "코드 리뷰", "분석"]):
-        return (
-            "에러 분석과 코드 리뷰 기능은 사용자가 입력한 에러 메시지나 Python 코드를 AI에게 보내고, "
-            "원인·해결 방법·개선 포인트를 한국어로 받아보는 기능입니다.\n\n"
-            "챗봇에서는 더 자유롭게 질문할 수 있고, 학습 페이지에서는 정해진 형식으로 분석 결과를 받을 수 있습니다."
+            "오류 해결은 보통 아래 순서로 보면 좋습니다.\n\n"
+            "1. 에러 메시지의 마지막 줄 확인\n"
+            "2. 어떤 파일과 몇 번째 줄에서 발생했는지 확인\n"
+            "3. ImportError, ModuleNotFoundError, 401, 404, 422, CORS, Mixed Content 등 오류 종류 구분\n"
+            "4. 프론트 콘솔, Network 탭, 백엔드 Docker 로그를 같이 확인\n"
+            "5. 수정 후 다시 API와 화면을 테스트\n\n"
+            "에러 메시지를 그대로 보내주면 원인과 해결 순서를 더 정확히 정리해드릴 수 있습니다."
         )
 
     return (
-        "현재 AI 응답 서버가 설정되지 않았거나 일시적으로 응답하지 않아 기본 챗봇 답변으로 안내할게요.\n\n"
-        "이 챗봇은 AI Developer Assistant 프로젝트 설명, 기능 안내, Python/FastAPI 학습 질문, "
-        "에러 해결 방향을 도와주는 용도로 설계되었습니다.\n\n"
-        "더 자유로운 AI 답변을 원하면 EC2 환경변수에 HF_TOKEN이 설정되어 있는지 확인해주세요."
+        "제게 말씀해 주세요. 🚀\n\n"
+        "저는 AI Developer Assistant 프로젝트 설명, Python/FastAPI 질문, EC2 배포 점검, "
+        "오류 해결 순서, 코드 리뷰 방향을 도와주는 챗봇입니다."
     )
 
 
-def call_huggingface_chat(user_id: int, message: str) -> Optional[str]:
+def build_system_prompt() -> str:
+    return """
+너는 AI Developer Assistant 프로젝트 안에 탑재된 한국어 AI 챗봇이다.
+
+반드시 지켜야 할 정보:
+- 이 사이트와 AI Developer Assistant 프로젝트를 만든 개발자는 전다훈(Dahun Jeon)이다.
+- 사용자가 "이 사이트 누가 만들었어?", "개발자가 누구야?", "제작자가 누구야?", "누가 만들었어?"처럼 물으면 반드시 "이 사이트를 만든 개발자는 전다훈 개발자님입니다."라고 답변한다.
+- 이 프로젝트는 AI 기반 개발 학습 도우미 서비스다.
+- 주요 기능은 오류 분석, 코드 리뷰, 학습 기록, 출석 체크, 포인트, 시험 시스템, 오답노트, 상점, 프로필 커스터마이징, 챗봇 기능이다.
+- 프론트엔드는 GitHub Pages의 docs 폴더에서 배포된다.
+- 백엔드는 EC2에서 Docker 컨테이너 기반 FastAPI 서버로 실행된다.
+- API 도메인은 https://dahun-ai.duckdns.org 를 사용한다.
+- DB는 SQLite 기반 history.db를 사용한다.
+
+답변 규칙:
+- 반드시 한국어로 답변한다.
+- 내부 추론 과정은 절대 출력하지 않는다.
+- 사용자가 짧게 물으면 짧고 명확하게 답한다.
+- 프로젝트 관련 질문은 전다훈 개발자님의 개인 프로젝트 기준으로 답한다.
+- 모르는 내용은 지어내지 말고, 확인 방법을 안내한다.
+"""
+
+
+def call_huggingface(user_id: int, user_message: str) -> Optional[str]:
     hf_token = os.getenv("HF_TOKEN")
     hf_model = os.getenv("HF_MODEL", "openai/gpt-oss-20b:fireworks-ai")
 
     if not hf_token:
         return None
 
-    messages = [{"role": "system", "content": SYSTEM_PROMPT}]
-    messages.extend(load_recent_messages(user_id))
-    messages.append({"role": "user", "content": message})
+    recent_messages = get_recent_chat_messages(user_id, limit=10)
+
+    messages = [
+        {
+            "role": "system",
+            "content": build_system_prompt(),
+        }
+    ]
+
+    for item in recent_messages:
+        role = item.get("role", "user")
+        content = item.get("message", "")
+
+        if role not in ["user", "assistant"]:
+            continue
+
+        if content.strip():
+            messages.append({
+                "role": role,
+                "content": content.strip(),
+            })
+
+    messages.append({
+        "role": "user",
+        "content": user_message,
+    })
 
     try:
-        res = requests.post(
+        response = requests.post(
             "https://router.huggingface.co/v1/chat/completions",
             headers={
                 "Authorization": f"Bearer {hf_token}",
@@ -188,100 +238,120 @@ def call_huggingface_chat(user_id: int, message: str) -> Optional[str]:
             json={
                 "model": hf_model,
                 "messages": messages,
-                "max_tokens": 1200,
-                "temperature": 0.25,
+                "max_tokens": 900,
+                "temperature": 0.3,
             },
             timeout=60,
         )
 
-        if res.status_code != 200:
+        if response.status_code != 200:
             return None
 
-        data = res.json()
-        content = data["choices"][0]["message"].get("content") or ""
-        content = content.strip()
-        return content if content else None
+        data = response.json()
+        message = data["choices"][0]["message"]
+        content = message.get("content") or ""
+
+        if not content.strip():
+            return None
+
+        return content.strip()
 
     except Exception:
         return None
 
 
 @router.post("/chat")
-def chat(data: ChatRequest, token_user_id: Optional[int] = Depends(get_current_user_id_from_header)):
-    message = data.message.strip()
+def chat(data: ChatRequest):
+    ensure_chat_history_table()
 
-    if not message:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="메시지를 입력해주세요.",
-        )
+    user_message = data.message.strip()
 
-    if len(message) > MAX_USER_MESSAGE_LENGTH:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"메시지는 {MAX_USER_MESSAGE_LENGTH}자 이하로 입력해주세요.",
-        )
+    if not user_message:
+        return {
+            "message": "질문을 입력해주세요.",
+            "reply": "질문을 입력해주세요.",
+        }
 
     conn = get_conn()
     cursor = conn.cursor()
-    _validate_user(cursor, data.user_id, token_user_id)
+
+    if not user_exists(cursor, data.user_id):
+        conn.close()
+        return {
+            "message": "유효하지 않은 사용자입니다.",
+            "reply": "로그인 정보가 올바르지 않습니다. 다시 로그인해주세요.",
+        }
+
     conn.close()
 
-    save_chat_message(data.user_id, "user", message)
+    if is_owner_question(user_message):
+        reply = owner_reply()
+    else:
+        ai_reply = call_huggingface(data.user_id, user_message)
+        reply = ai_reply if ai_reply else project_fallback_reply(user_message)
 
-    ai_reply = call_huggingface_chat(data.user_id, message)
-    reply = ai_reply or fallback_reply(message)
-
+    save_chat_message(data.user_id, "user", user_message)
     save_chat_message(data.user_id, "assistant", reply)
 
     return {
+        "message": "응답 완료",
         "reply": reply,
-        "source": "huggingface" if ai_reply else "fallback",
     }
 
 
 @router.get("/chat/history")
-def get_chat_history(
-    user_id: int = Query(...),
-    token_user_id: Optional[int] = Depends(get_current_user_id_from_header),
-):
+def get_chat_history(user_id: int = Query(...), limit: int = Query(50)):
+    ensure_chat_history_table()
+
     conn = get_conn()
     cursor = conn.cursor()
-    _validate_user(cursor, user_id, token_user_id)
+
+    if not user_exists(cursor, user_id):
+        conn.close()
+        return {
+            "message": "유효하지 않은 사용자입니다.",
+            "history": [],
+        }
 
     cursor.execute("""
-        SELECT id, role, message, created_at
+        SELECT id, user_id, role, message, created_at
         FROM chat_history
         WHERE user_id = ?
-        ORDER BY id ASC
-    """, (user_id,))
+        ORDER BY id DESC
+        LIMIT ?
+    """, (user_id, limit))
+
     rows = cursor.fetchall()
     conn.close()
 
+    history = [dict(row) for row in reversed(rows)]
+
     return {
-        "history": [
-            {
-                "id": row["id"],
-                "role": row["role"],
-                "message": row["message"],
-                "created_at": row["created_at"],
-            }
-            for row in rows
-        ]
+        "history": history,
     }
 
 
 @router.delete("/chat/history")
-def clear_chat_history(
-    user_id: int = Query(...),
-    token_user_id: Optional[int] = Depends(get_current_user_id_from_header),
-):
+def delete_chat_history(user_id: int = Query(...)):
+    ensure_chat_history_table()
+
     conn = get_conn()
     cursor = conn.cursor()
-    _validate_user(cursor, user_id, token_user_id)
 
-    cursor.execute("DELETE FROM chat_history WHERE user_id = ?", (user_id,))
+    if not user_exists(cursor, user_id):
+        conn.close()
+        return {
+            "message": "유효하지 않은 사용자입니다.",
+        }
+
+    cursor.execute("""
+        DELETE FROM chat_history
+        WHERE user_id = ?
+    """, (user_id,))
+
     conn.commit()
     conn.close()
 
-    return {"message": "챗봇 대화 기록을 삭제했습니다."}
+    return {
+        "message": "챗봇 대화 기록이 삭제되었습니다.",
+    }
